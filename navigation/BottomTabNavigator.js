@@ -8,6 +8,9 @@ import PortfolioScreen from '../screens/(dashboard)/Portfolio';
 import TradingViewWidget from '../screens/(dashboard)/MarketScreen';
 import MenuScreen from '../screens/(dashboard)/MenuScreen';
 import SupportScreen from '../screens/(dashboard)/SupportScreen';
+import TermsScreen from '../screens/(dashboard)/TermsScreen';
+import ReceiveScreen from '../screens/(dashboard)/Receive';
+import SendScreen from '../screens/(dashboard)/Send';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -17,6 +20,8 @@ function DashboardStack() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Dashboard" component={DashboardScreen} />
             <Stack.Screen name="CoinDetailScreen" component={CoinDetailScreen} />
+            <Stack.Screen name="Receive" component={ReceiveScreen} />
+            <Stack.Screen name="Send" component={SendScreen} />
         </Stack.Navigator>
     );
 }
@@ -34,10 +39,11 @@ function PortfolioStack() {
 
 function MenuStack() {
     return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Menu" component={MenuScreen} />
-            <Stack.Screen name="PortfolioStack" component={PortfolioStack} />
+        <Stack.Navigator >
+            <Stack.Screen name="Menu" options={{ headerShown: false }} component={MenuScreen} />
+            <Stack.Screen name="Portfolio"  component={PortfolioStack} />
             <Stack.Screen name="Support" component={SupportScreen} />
+            <Stack.Screen name="Terms" component={TermsScreen} />
         </Stack.Navigator>
     );
 }

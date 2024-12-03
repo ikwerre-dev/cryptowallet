@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { LineChart } from 'react-native-chart-kit';
-import { Bell, X, Eye, EyeOff, ArrowRight } from 'react-native-feather';
+import { Bell, X, Eye, EyeOff, ArrowRight, ArrowDown, ArrowUp, Repeat } from 'react-native-feather';
 import * as Haptics from 'expo-haptics';
 
 const cryptoData = [
@@ -53,18 +53,18 @@ const MarketItem = ({ icon, name, symbol, price, change, chartData, onPress }) =
     }, [currentData]);
 
     return (
-        <TouchableOpacity style={styles.marketItem}  onPress={onPress}>
-            
+        <TouchableOpacity style={styles.marketItem} onPress={onPress}>
+
             <View style={styles.marketItemLeft}>
                 <Image source={{ uri: `https://cryptologos.cc/logos/${name.toLowerCase()}-${symbol.toLowerCase()}-logo.png` }} style={styles.marketIcon} />
-                
+
                 <View>
                     <Text style={styles.marketName}>{name}</Text>
                     <Text style={styles.marketSymbol}>{symbol}</Text>
                 </View>
             </View>
             <View style={styles.marketItemRight}>
-                
+
                 <View>
                     <Text style={styles.marketPrice}>${price}</Text>
                     <Text style={[styles.marketChange, { color: change >= 0 ? '#4A8CFF' : '#F44336' }]}>
@@ -87,7 +87,20 @@ export default function DashboardScreen() {
     const handlePortfolioPress = (item) => {
         navigation.navigate('CoinDetailScreen', { item });
     };
+    const handleButtonPress = (action) => {
+        console.log(`${action} button pressed`);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          navigation.navigate(action);
 
+       };
+    //   useEffect(() => {
+    //     const interval = setInterval(() => {
+    //       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    //     }, 2000);
+    
+    //     return () => clearInterval(interval);
+    //   }, []);
+    
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView>
@@ -121,6 +134,28 @@ export default function DashboardScreen() {
                         <Text style={styles.balanceChangeText}>↑ 10.75%</Text>
                     </View>
                 </View>
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => handleButtonPress('Receive')}
+                    >
+                        <Text style={styles.buttonText}><ArrowDown color={'white'}  /></Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => handleButtonPress('Send')}
+                    >
+                        <Text style={styles.buttonText}><ArrowUp color={'white'} /></Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => handleButtonPress('Swap')}
+                    >
+                        <Text style={styles.buttonText}><Repeat color={'white'} /></Text>
+                    </TouchableOpacity>
+                </View>
 
                 <View style={styles.portfolio}>
                     <View style={styles.portfolioHeader}>
@@ -151,7 +186,7 @@ export default function DashboardScreen() {
                 </View>
 
 
-                <View style={styles.referral}>
+                {/* <View style={styles.referral}>
                     <View style={styles.referralContent}>
                         <View>
                             <Text style={styles.referralTitle}>Connect for Interlinking</Text>
@@ -164,7 +199,7 @@ export default function DashboardScreen() {
                     <TouchableOpacity style={styles.closeButton}>
                         <X stroke="#fff" width={20} height={20} />
                     </TouchableOpacity>
-                </View>
+                </View> */}
 
                 <View style={styles.market}>
                     <Text style={styles.marketTitle}>My Portfolio</Text>
@@ -195,6 +230,28 @@ const styles = StyleSheet.create({
         backgroundColor: '#000',
 
     },
+    buttonContainer: {
+         flexDirection: 'row',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        paddingHorizontal: 16,
+        paddingVertical:5
+
+      },
+      button: {
+        backgroundColor: '#121212',
+        paddingVertical: 15,
+        paddingHorizontal: 30,
+        borderRadius: 10,
+        marginBottom: 10,
+        width: '30%',  // This makes each button 1/3 of the row width
+        alignItems: 'center',
+      },
+      buttonText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#fff',
+      },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',

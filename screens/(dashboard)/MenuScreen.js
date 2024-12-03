@@ -9,9 +9,9 @@ export default function ProfileScreen() {
   const menuItems = [
     { icon: 'person-outline', title: 'Profile', screen: 'HistoryScreen' },
     { icon: 'time-outline', title: 'History', screen: 'HistoryScreen' },
-    { icon: 'person-outline', title: 'My Portfolio', screen: 'PortfolioStack' }, // Add the new Portfolio screen
+    { icon: 'person-outline', title: 'My Portfolio', screen: 'Portfolio' }, // Add the new Portfolio screen
     { icon: 'help-circle-outline', title: 'Help and Support', screen: 'Support' },
-    { icon: 'document-text-outline', title: 'Terms and Conditions', screen: 'TermsScreen' },
+    { icon: 'document-text-outline', title: 'Terms and Conditions', screen: 'Terms' },
     { icon: 'power', title: 'Logout', screen: 'Logout' },
   ];
 

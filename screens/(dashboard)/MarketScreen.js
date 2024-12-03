@@ -30,10 +30,15 @@ const TradingViewWidget = () => {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: 'black',
     flex: 1,
+    paddingTop: 60
+
   },
   webview: {
     flex: 1,
+    // backgroundColor: 'black',
+    borderWidth: 0
   },
 });
 

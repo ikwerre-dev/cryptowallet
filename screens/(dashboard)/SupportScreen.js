@@ -28,8 +28,7 @@ const SupportScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 60
-  },
+   },
   webview: {
     flex: 1,
   },
