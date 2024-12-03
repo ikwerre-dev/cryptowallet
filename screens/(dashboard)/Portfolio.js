@@ -100,7 +100,7 @@ export default function PortfolioScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             <ScrollView>
 
                 <View key={1} style={styles.balance}>
@@ -144,7 +144,7 @@ export default function PortfolioScreen() {
 
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
         padding: 16,
         paddingVertical: 0,
         paddingBottom: 5,
-        paddingTop: 20,
+        paddingTop: 100,
         backgroundColor: '#7B61FF'
     },
     avatar: {
@@ -173,7 +173,8 @@ const styles = StyleSheet.create({
     },
     balance: {
         padding: 16,
-        backgroundColor: '#7B61FF'
+        backgroundColor: '#7B61FF',
+        paddingTop: 80,
 
     },
     balanceLabel: {

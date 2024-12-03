@@ -1,17 +1,103 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Switch, Image } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Switch, Image, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import Checkbox from '../components/Checkbox';
+import * as LocalAuthentication from 'expo-local-authentication';
+import { useAuth } from '../../context/AuthContext';
 
 export default function CreatePasswordScreen({ navigation }) {
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [faceIdEnabled, setFaceIdEnabled] = useState(false);
     const [understood, setUnderstood] = useState(false);
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [loginEmail, setLoginEmail] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
+    const { login } = useAuth();
 
     const passwordStrength = password.length >= 8 ? 'Good' : 'Weak';
+
+    const handleFaceIdToggle = async (value) => {
+        if (value) {
+            const hasHardware = await LocalAuthentication.hasHardwareAsync();
+            if (!hasHardware) {
+                Alert.alert('Error', 'Your device does not support Face ID');
+                return;
+            }
+
+            const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+            if (!isEnrolled) {
+                Alert.alert('Error', 'Face ID is not set up on your device');
+                return;
+            }
+
+            const result = await LocalAuthentication.authenticateAsync();
+            if (result.success) {
+                setFaceIdEnabled(true);
+            } else {
+                Alert.alert('Error', 'Face ID authentication failed');
+            }
+        } else {
+            setFaceIdEnabled(false);
+        }
+    };
+
+    const handleLogin = () => {
+        const token = 'example-token'; // Replace with a token from your backend
+        login({ loginEmail, token });
+    };
+
+    const renderLoginModal = () => (
+        <Modal
+            animationType="slide"
+            transparent={true}
+            visible={showLoginModal}
+            onRequestClose={() => setShowLoginModal(false)}
+        >
+            <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>Login</Text>
+                    <TextInput
+                        style={styles.modalInput}
+                        placeholder="Email"
+                        value={loginEmail}
+                        onChangeText={setLoginEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        placeholderTextColor="#666"
+                    />
+                    <TextInput
+                        style={styles.modalInput}
+                        placeholder="Password"
+                        value={loginPassword}
+                        onChangeText={setLoginPassword}
+                        secureTextEntry
+                        placeholderTextColor="#666"
+                    />
+                    <TouchableOpacity
+                        style={styles.modalButton}
+                        onPress={handleLogin}
+
+                     
+                    >
+                        <Text style={styles.modalButtonText}>Login</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.modalCloseButton}
+                        onPress={() => {
+                            // Handle login logic here
+                            setShowLoginModal(false);
+                        }}
+                                            >
+                        <Text style={styles.modalCloseButtonText}>Close</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
+    );
 
     return (
         <SafeAreaView style={styles.container}>
@@ -24,6 +110,18 @@ export default function CreatePasswordScreen({ navigation }) {
                 <Text style={styles.subtitle}>
                     This password will unlock your Cryptooly wallet only on this service
                 </Text>
+
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Email"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        placeholderTextColor="#666"
+                    />
+                </View>
 
                 <View style={styles.inputContainer}>
                     <TextInput
@@ -68,7 +166,7 @@ export default function CreatePasswordScreen({ navigation }) {
                     <Text style={styles.faceIdText}>Sign in with Face ID?</Text>
                     <Switch
                         value={faceIdEnabled}
-                        onValueChange={setFaceIdEnabled}
+                        onValueChange={handleFaceIdToggle}
                         trackColor={{ false: '#767577', true: '#000' }}
                         thumbColor={faceIdEnabled ? '#4CAF50' : '#f4f3f4'}
                     />
@@ -92,7 +190,16 @@ export default function CreatePasswordScreen({ navigation }) {
                 >
                     <Text style={styles.buttonText}>Create Password</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.loginButton}
+                    onPress={() => setShowLoginModal(true)}
+                >
+                    <Text style={styles.loginButtonText}>Already have an account? Login</Text>
+                </TouchableOpacity>
             </View>
+
+            {renderLoginModal()}
         </SafeAreaView>
     );
 }
@@ -187,4 +294,59 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
+    loginButton: {
+        marginTop: 16,
+        alignItems: 'center',
+    },
+    loginButtonText: {
+        color: '#2196F3',
+        fontSize: 16,
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        alignItems: 'end',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        padding: 24,
+        width: '100%',
+        paddingBottom: '50%',
+        paddingTop: '5%',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 16,
+    },
+    modalInput: {
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        marginBottom: 16,
+    },
+    modalButton: {
+        backgroundColor: '#000',
+        borderRadius: 8,
+        padding: 12,
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    modalButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    modalCloseButton: {
+        alignItems: 'center',
+    },
+    modalCloseButtonText: {
+        color: '#666',
+        fontSize: 16,
+    },
 });
+

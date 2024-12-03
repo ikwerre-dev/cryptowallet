@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Home, PieChart, RefreshCw, BarChart2, Settings, MoreHorizontal } from 'react-native-feather';
-import DashboardScreen from '../screens/(dashboard)/Dashboard';
+import DashboardScreen from '../screens/(dashboard)/Dashboard.js';
 import CoinDetailScreen from '../screens/(dashboard)/CoinDetailScreen';
 import PortfolioScreen from '../screens/(dashboard)/Portfolio';
 import TradingViewWidget from '../screens/(dashboard)/MarketScreen';
@@ -11,6 +11,8 @@ import SupportScreen from '../screens/(dashboard)/SupportScreen';
 import TermsScreen from '../screens/(dashboard)/TermsScreen';
 import ReceiveScreen from '../screens/(dashboard)/Receive';
 import SendScreen from '../screens/(dashboard)/Send';
+import SwapScreen from '../screens/(dashboard)/Swap';
+import P2PTransferScreen from '../screens/(dashboard)/P2P.js';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -22,6 +24,7 @@ function DashboardStack() {
             <Stack.Screen name="CoinDetailScreen" component={CoinDetailScreen} />
             <Stack.Screen name="Receive" component={ReceiveScreen} />
             <Stack.Screen name="Send" component={SendScreen} />
+            <Stack.Screen name="Swap" component={SwapScreen} />
         </Stack.Navigator>
     );
 }
@@ -81,7 +84,7 @@ export default function BottomTabNavigator() {
             />
             <Tab.Screen
                 name="P2P"
-                component={DashboardScreen}
+                component={P2PTransferScreen}
                 options={{
                     tabBarIcon: ({ color }) => (
                         <RefreshCw stroke={color} width={24} height={24} />

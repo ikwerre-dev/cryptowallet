@@ -6,12 +6,17 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [biometricEmail, setBiometricEmail] = useState(null);
 
     useEffect(() => {
         const loadUserData = async () => {
             const storedUser = await AsyncStorage.getItem('user');
+            const storedBiometricEmail = await AsyncStorage.getItem('biometric_email');
             if (storedUser) {
                 setUser(JSON.parse(storedUser));
+            }
+            if (storedBiometricEmail) {
+                setBiometricEmail(storedBiometricEmail);
             }
             setLoading(false);
         };
@@ -29,8 +34,13 @@ export const AuthProvider = ({ children }) => {
         await AsyncStorage.removeItem('user');
     };
 
+    const saveBiometricEmail = async (email) => {
+        setBiometricEmail(email);
+        await AsyncStorage.setItem('biometric_email', email);
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, logout, loading, biometricEmail, saveBiometricEmail }}>
             {children}
         </AuthContext.Provider>
     );
@@ -39,3 +49,4 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
     return useContext(AuthContext);
 };
+

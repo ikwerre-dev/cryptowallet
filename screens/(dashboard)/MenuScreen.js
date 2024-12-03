@@ -2,9 +2,11 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
+import { useAuth } from '../../context/AuthContext';
 
 export default function ProfileScreen() {
   const navigation = useNavigation(); // Initialize navigation
+  const { logout } = useAuth();
 
   const menuItems = [
     { icon: 'person-outline', title: 'Profile', screen: 'HistoryScreen' },
@@ -29,7 +31,7 @@ export default function ProfileScreen() {
           <TouchableOpacity
             key={index}
             style={styles.menuItem}
-            onPress={() => navigation.navigate(item.screen)} // Navigate to the selected screen
+            onPress={item.title == 'Logout' ? logout : () => navigation.navigate(item.screen)} // Navigate to the selected screen
           >
             <View style={styles.menuItemLeft}>
               <Ionicons name={item.icon} size={24} color="#7B61FF" />

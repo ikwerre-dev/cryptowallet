@@ -13,13 +13,21 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera"
+      },
+      "bundleIdentifier": "com.codewithhonour.cryptowallet"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
+      "package": "com.codewithhonour.cryptowallet"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -27,6 +35,11 @@
     "plugins": [
       "expo-barcode-scanner",
       "react-native-vision-camera"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9e040e95-b71a-434a-af24-04fe1d958ee6"
+      }
+    }
   }
 }
