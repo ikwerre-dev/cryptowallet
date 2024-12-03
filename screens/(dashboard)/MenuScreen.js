@@ -1,49 +1,71 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
-import { useAuth } from '../../context/AuthContext';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
 
-export default function ProfileScreen() {
-  const navigation = useNavigation(); // Initialize navigation
-  const { logout } = useAuth();
+const SettingsScreen = () => {
+  const navigation = useNavigation();
 
   const menuItems = [
-    { icon: 'person-outline', title: 'Profile', screen: 'HistoryScreen' },
-    { icon: 'time-outline', title: 'History', screen: 'HistoryScreen' },
-    { icon: 'person-outline', title: 'My Portfolio', screen: 'Portfolio' }, // Add the new Portfolio screen
+    { icon: 'account-outline', title: 'Profile', screen: 'Profile' },
+    { icon: 'clock-outline', title: 'Transactions', screen: 'Transactions' },
+    { icon: 'chart-box-outline', title: 'My Portfolio', screen: 'Portfolio' },
     { icon: 'help-circle-outline', title: 'Help and Support', screen: 'Support' },
-    { icon: 'document-text-outline', title: 'Terms and Conditions', screen: 'Terms' },
+    { icon: 'file-document-outline', title: 'Terms and Conditions', screen: 'Terms' },
     { icon: 'power', title: 'Logout', screen: 'Logout' },
   ];
 
+  const MenuItem = ({ icon, title, screen }) => (
+    <TouchableOpacity
+      style={styles.menuItem}
+      onPress={() =>
+      {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        navigation.navigate(screen);
+      }    
+    }
+    >
+      <View style={styles.menuItemLeft}>
+        <View style={styles.iconContainer}>
+          <MaterialCommunityIcons name={icon} size={22} color="#000" />
+        </View>
+        <Text style={styles.menuItemText}>{title}</Text>
+      </View>
+      <MaterialCommunityIcons name="chevron-right" size={20} color="#C7C7CC" />
+    </TouchableOpacity>
+  );
+
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-    
-        <Text style={styles.name}>Agilan Senthil</Text>
-        <Text style={styles.email}>agilansenthilkumar@gmail.com</Text>
-        <Text style={styles.phone}>+91 9444977118</Text>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Menu</Text>
+        <View style={styles.placeholder} />
       </View>
 
-      <View style={styles.menuContainer}>
-        {menuItems.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.menuItem}
-            onPress={item.title == 'Logout' ? logout : () => navigation.navigate(item.screen)} // Navigate to the selected screen
-          >
-            <View style={styles.menuItemLeft}>
-              <Ionicons name={item.icon} size={24} color="#7B61FF" />
-              <Text style={styles.menuItemText}>{item.title}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="#666" />
-          </TouchableOpacity>
-        ))}
-      </View>
-    </ScrollView>
+      <ScrollView style={styles.content}>
+        <View style={styles.menuContainer}>
+          {menuItems.map((item, index) => (
+            <MenuItem key={index} {...item} />
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -51,53 +73,59 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   header: {
-    backgroundColor: '#7B61FF',
-    padding: 20,
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 80,
-    paddingBottom: 30,
+    justifyContent: 'space-between',
+    padding: 16,
+    backgroundColor: '#000',
   },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 15,
-    borderWidth: 3,
-    borderColor: '#fff',
+  backButton: {
+    padding: 8,
   },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
     color: '#fff',
-    marginBottom: 5,
   },
-  email: {
-    fontSize: 16,
-    color: '#fff',
-    marginBottom: 5,
+  placeholder: {
+    width: 40,
   },
-  phone: {
-    fontSize: 16,
-    color: '#fff',
+  content: {
+    flex: 1,
   },
   menuContainer: {
-    padding: 15,
+    backgroundColor: '#121212',
+    borderRadius: 10,
+    marginHorizontal: 16,
+    overflow: 'hidden',
+    marginTop:20
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 15,
+    padding: 12,
+    paddingVertical:15,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#000',
   },
   menuItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F2F2F7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
   menuItemText: {
-    fontSize: 16,
-    marginLeft: 15,
+    fontSize: 17,
     color: '#fff',
   },
 });
+
+export default SettingsScreen;

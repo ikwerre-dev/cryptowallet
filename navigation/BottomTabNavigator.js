@@ -13,6 +13,9 @@ import ReceiveScreen from '../screens/(dashboard)/Receive';
 import SendScreen from '../screens/(dashboard)/Send';
 import SwapScreen from '../screens/(dashboard)/Swap';
 import P2PTransferScreen from '../screens/(dashboard)/P2P.js';
+import TransactionsScreen from '../screens/(dashboard)/HistoryScreen.js';
+import NotificationScreen from '../screens/(dashboard)/NotificationScreen.js';
+import PersonalDetailsScreen from '../screens/(dashboard)/ProfileScreen.js';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -25,6 +28,14 @@ function DashboardStack() {
             <Stack.Screen name="Receive" component={ReceiveScreen} />
             <Stack.Screen name="Send" component={SendScreen} />
             <Stack.Screen name="Swap" component={SwapScreen} />
+            <Stack.Screen name="Notification" options={{
+                headerStyle: {
+                    backgroundColor: '#000',
+                },
+                headerTintColor: '#fff',
+                headerShown: true
+            }} component={NotificationScreen} />
+
         </Stack.Navigator>
     );
 }
@@ -42,12 +53,61 @@ function PortfolioStack() {
 
 function MenuStack() {
     return (
-        <Stack.Navigator >
-            <Stack.Screen name="Menu" options={{ headerShown: false }} component={MenuScreen} />
-            <Stack.Screen name="Portfolio"  component={PortfolioStack} />
-            <Stack.Screen name="Support" component={SupportScreen} />
-            <Stack.Screen name="Terms" component={TermsScreen} />
+        <Stack.Navigator>
+            <Stack.Screen
+                name="Menu"
+                options={{ headerShown: false }}
+                component={MenuScreen}
+            />
+            <Stack.Screen
+                name="Portfolio"
+                component={PortfolioStack}
+                options={{
+                    headerStyle: {
+                        backgroundColor: '#000',
+                    },
+                    headerTintColor: '#fff', // Ensures the text/icon color is visible on black
+                }}
+            />
+            <Stack.Screen
+                name="Support"
+                component={SupportScreen}
+                options={{
+                    headerStyle: {
+                        backgroundColor: '#000',
+                    },
+                    headerTintColor: '#fff',
+                }}
+            />
+            <Stack.Screen
+                name="Terms"
+                component={TermsScreen}
+                options={{
+                    headerStyle: {
+                        backgroundColor: '#000',
+                    },
+                    headerTintColor: '#fff',
+                }}
+            />
+            <Stack.Screen
+                name="Transactions"
+                component={TransactionsScreen}
+                options={{
+                    headerStyle: {
+                        backgroundColor: '#000',
+                    },
+                    headerTintColor: '#fff',
+                }}
+            />
+
+            <Stack.Screen
+                name="Profile"
+                component={PersonalDetailsScreen}
+                options={{ headerShown: false }}
+
+            />
         </Stack.Navigator>
+
     );
 }
 

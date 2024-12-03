@@ -87,6 +87,10 @@ export default function DashboardScreen() {
     const handlePortfolioPress = (item) => {
         navigation.navigate('CoinDetailScreen', { item });
     };
+
+    const handleNotificationPress = (item) => {
+        navigation.navigate('Notification');
+    };
     const handleButtonPress = (action) => {
         console.log(`${action} button pressed`);
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -109,7 +113,7 @@ export default function DashboardScreen() {
                         source={{ uri: 'https://i.pravatar.cc/150?img=14' }}
                         style={styles.avatar}
                     />
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={handleNotificationPress}>
                         <Bell stroke="#fff" width={24} height={24} />
                     </TouchableOpacity>
                 </View>
