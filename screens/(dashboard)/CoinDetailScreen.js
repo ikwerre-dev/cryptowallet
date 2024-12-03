@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LineChart } from 'react-native-chart-kit';
@@ -15,36 +15,12 @@ const TimeButton = ({ label, active, onPress }) => (
     </TouchableOpacity>
 );
 
+// Static mapping of coin names to image files
+
+
 export default function CoinDetailScreen({ route, navigation }) {
     const { item } = route.params;
-    const [activeTime, setActiveTime] = useState('1D');
-    const [chartData, setChartData] = useState({
-        labels: [],
-        datasets: [{
-            data: [
-                86.21, 100.32, 95.43, 120.54, 110.65,
-                137.88, 115.32, 89.54, 125.65, 130.43
-            ]
-        }]
-    });
-
-    // Function to simulate changing data every second
-    const updateChartData = () => {
-        setChartData(prevData => {
-            const newData = [...prevData.datasets[0].data];
-            newData.shift();  // Remove the first element (simulate shifting the data)
-            newData.push(Math.random() * 100 + 100);  // Add new random value to the end
-            return {
-                labels: [...prevData.labels, `T${prevData.labels.length + 1}`], // Add new label
-                datasets: [{ data: newData }]
-            };
-        });
-    };
-
-    useEffect(() => {
-        const interval = setInterval(updateChartData, 1000); // Update data every second
-        return () => clearInterval(interval); // Cleanup interval on component unmount
-    }, []);
+    const [activeTime, setActiveTime] = React.useState('1D');
 
     const getCoinImage = (coinName) => {
         return coinImages[coinName] || coinImages.Default;
@@ -63,10 +39,12 @@ export default function CoinDetailScreen({ route, navigation }) {
 
             <View style={styles.coinInfo}>
                 <View style={styles.coinHeader}>
+              
                     <Image
                         source={{ uri: `https://cryptologos.cc/logos/${item.name.toLowerCase()}-${item.symbol.toLowerCase()}-logo.png` }}
                         style={styles.coinIcon}
                     />
+
                     <Text style={styles.coinName}>
                         {item.name} / {item.symbol}
                     </Text>
@@ -103,7 +81,15 @@ export default function CoinDetailScreen({ route, navigation }) {
                 </View>
 
                 <LineChart
-                    data={chartData}
+                    data={{
+                        labels: [],
+                        datasets: [{
+                            data: [
+                                86.21, 100.32, 95.43, 120.54, 110.65,
+                                137.88, 115.32, 89.54, 125.65, 130.43
+                            ]
+                        }]
+                    }}
                     width={350}
                     height={220}
                     chartConfig={{

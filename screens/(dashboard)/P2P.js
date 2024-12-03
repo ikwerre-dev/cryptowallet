@@ -158,7 +158,7 @@ export default function P2PTransferScreen({ navigation }) {
                         onChangeText={setAmount}
                     />
                 </View>
-
+                <Text style={styles.label}>Coin</Text>
                 <TouchableOpacity
                     style={styles.currencySelector}
                     onPress={() => setShowCurrencyModal(true)}
@@ -260,8 +260,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#1a1a1a',
         borderRadius: 8,
         padding: 12,
+        paddingVertical:20,
         color: '#fff',
-        fontSize: 16,
+        fontSize: 18,
     },
     currencySelector: {
         flexDirection: 'row',
@@ -269,8 +270,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         backgroundColor: '#1a1a1a',
         borderRadius: 8,
-        padding: 12,
+        padding: 20,
         marginBottom: 24,
+        marginTop:10
     },
     currencyInfo: {
         flexDirection: 'row',
