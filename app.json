@@ -26,6 +26,9 @@
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#000"
       },
+      "release": {
+        "buildType": "apk"
+      },
       "permissions": [
         "android.permission.CAMERA"
       ],

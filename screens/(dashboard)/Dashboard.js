@@ -15,7 +15,6 @@ const cryptoData = [
     { symbol: "USDT", name: "Tether", price: 0.98, change: 0.15 },
 ];
 
-
 const CryptoCard = ({ symbol, name, price, change, color, onPress }) => (
     <TouchableOpacity style={[styles.cryptoCard, { backgroundColor: color }]} onPress={onPress}>
         <View style={styles.cryptoHeader}>
