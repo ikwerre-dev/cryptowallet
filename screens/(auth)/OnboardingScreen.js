@@ -12,6 +12,7 @@ export default function OnboardingScreen({ navigation }) {
     return (
         <View style={[styles.container, { paddingTop: insets.top }]}>
             <View style={styles.content}>
+                
                 <Image
                     source={require('../../assets/(auth)/onboarding.png')}
                     style={styles.onboardingImage}
