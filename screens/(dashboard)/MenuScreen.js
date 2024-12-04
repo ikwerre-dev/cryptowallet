@@ -10,9 +10,11 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
+import { useAuth } from '../../context/AuthContext';
 
 const SettingsScreen = () => {
   const navigation = useNavigation();
+  const { logout } = useAuth();
 
   const menuItems = [
     { icon: 'account-outline', title: 'Profile', screen: 'Profile' },
@@ -29,7 +31,8 @@ const SettingsScreen = () => {
       onPress={() =>
       {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        navigation.navigate(screen);
+         title == 'Logout' ? logout() :  navigation.navigate(screen)        
+        
       }    
     }
     >

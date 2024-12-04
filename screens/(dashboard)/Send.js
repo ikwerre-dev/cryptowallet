@@ -14,6 +14,16 @@ import * as Haptics from 'expo-haptics';
 // import { RNCamera } from 'react-native-camera';
 import { MotiView } from 'moti';
 import { Easing } from 'react-native-reanimated';
+import * as Notifications from 'expo-notifications';
+ 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
 
 const { width } = Dimensions.get('window');
 
@@ -72,6 +82,14 @@ export default function SendScreen({ navigation }) {
 
   const handleConfirm = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Transaction Successful',
+        body: "Transaction has been processed successfully!!!",
+      },
+      trigger: null,
+    });
+    
     setShowSuccess(true);
     setTimeout(() => {
       setShowSuccess(false);

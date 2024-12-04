@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { LineChart } from 'react-native-chart-kit';
 import { Bell, X, Eye, EyeOff, ArrowRight, ArrowDown, ArrowUp, Repeat } from 'react-native-feather';
 import * as Haptics from 'expo-haptics';
+import { Accelerometer } from 'expo-sensors';
 
 const cryptoData = [
     { symbol: "BTC", name: "Bitcoin", price: 6780, change: 11.75 },
@@ -79,7 +80,9 @@ const MarketItem = ({ icon, name, symbol, price, change, chartData, onPress }) =
 export default function DashboardScreen() {
     const navigation = useNavigation();
     const [showBalance, setShowBalance] = React.useState(true);
-
+    const [shakeCount, setShakeCount] = useState(0);
+    const [lastShakeTime, setLastShakeTime] = useState(0);
+  
     const toggleBalanceVisibility = () => {
         setShowBalance(!showBalance);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
@@ -97,6 +100,43 @@ export default function DashboardScreen() {
           navigation.navigate(action);
 
        };
+
+       useEffect(() => {
+        const subscription = Accelerometer.addListener((accelerometerData) => {
+          const { x, y, z } = accelerometerData;
+    
+          // Calculate shake magnitude
+          const magnitude = Math.sqrt(x * x + y * y + z * z);
+          const shakeThreshold = 2; // Adjust this value if necessary
+          const currentTime = Date.now();
+    
+          // Detect shake and check the time difference for double shake
+          if (magnitude > shakeThreshold) {
+            if (currentTime - lastShakeTime < 1000) { // 1 second window for double shake
+              setShakeCount(shakeCount + 1);
+            } else {
+              setShakeCount(1); // reset count if shake is too far apart
+            }
+    
+            setLastShakeTime(currentTime);
+          }
+    
+          // If double shake is detected, toggle the balance visibility
+          if (shakeCount >= 2) {
+            toggleBalanceVisibility();
+            setShakeCount(0); // Reset shake count after action
+          }
+        });
+    
+        // Set update interval for accelerometer (100ms)
+        Accelerometer.setUpdateInterval(100);
+    
+        // Cleanup the subscription when the component unmounts
+        return () => subscription.remove();
+      }, [shakeCount, lastShakeTime]); // Dependencies on shakeCount and lastShakeTime
+    
+
+       
     //   useEffect(() => {
     //     const interval = setInterval(() => {
     //       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -120,7 +160,7 @@ export default function DashboardScreen() {
 
                 <View style={styles.balance}>
                     <Text style={styles.balanceLabel}>Portfolio Balance</Text>
-                    <View style={styles.balanceRow}>
+                    <TouchableOpacity  onPress={toggleBalanceVisibility} style={styles.balanceRow}>
                         {showBalance ? (
                             <Text style={styles.balanceAmount}>$12,550.50</Text>
                         ) : (
@@ -133,7 +173,7 @@ export default function DashboardScreen() {
                                 <EyeOff stroke="#fff" width={24} height={24} style={styles.eyeIcon} />
                             )}
                         </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
                     <View style={styles.balanceChange}>
                         <Text style={styles.balanceChangeText}>↑ 10.75%</Text>
                     </View>

@@ -20,6 +20,7 @@ import Animated, {
     Extrapolate,
 } from 'react-native-reanimated';
 import { MotiView } from 'moti';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 import { Easing } from 'react-native-reanimated';
@@ -121,7 +122,7 @@ export default function P2PTransferScreen({ navigation }) {
     );
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -207,7 +208,7 @@ export default function P2PTransferScreen({ navigation }) {
                     </MotiView>
                 </View>
             </Modal>
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -221,7 +222,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: 16,
-        paddingTop: 50,
+        // paddingTop: 50,
     },
     headerTitle: {
         fontSize: 20,

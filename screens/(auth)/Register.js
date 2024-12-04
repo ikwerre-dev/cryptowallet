@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Switch, Image, Modal, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Switch, Modal, Alert, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import Checkbox from '../components/Checkbox';
@@ -17,6 +17,35 @@ export default function CreatePasswordScreen({ navigation }) {
     const [loginEmail, setLoginEmail] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
     const { login } = useAuth();
+
+    const [emailError, setEmailError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [confirmPasswordError, setConfirmPasswordError] = useState('');
+
+    const validateEmail = (email) => {
+        const re = /\S+@\S+\.\S+/;
+        if (!re.test(email)) {
+            setEmailError('Please enter a valid email address');
+        } else {
+            setEmailError('');
+        }
+    };
+
+    const validatePassword = (password) => {
+        if (password.length < 8) {
+            setPasswordError('Password must be at least 8 characters long');
+        } else {
+            setPasswordError('');
+        }
+    };
+
+    const validateConfirmPassword = (confirmPassword) => {
+        if (confirmPassword !== password) {
+            setConfirmPasswordError('Passwords do not match');
+        } else {
+            setConfirmPasswordError('');
+        }
+    };
 
     const passwordStrength = password.length >= 8 ? 'Good' : 'Weak';
 
@@ -80,18 +109,13 @@ export default function CreatePasswordScreen({ navigation }) {
                     <TouchableOpacity
                         style={styles.modalButton}
                         onPress={handleLogin}
-
-                     
                     >
                         <Text style={styles.modalButtonText}>Login</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.modalCloseButton}
-                        onPress={() => {
-                            // Handle login logic here
-                            setShowLoginModal(false);
-                        }}
-                                            >
+                        onPress={() => setShowLoginModal(false)}
+                    >
                         <Text style={styles.modalCloseButtonText}>Close</Text>
                     </TouchableOpacity>
                 </View>
@@ -101,104 +125,124 @@ export default function CreatePasswordScreen({ navigation }) {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerText}>1/3</Text>
-            </View>
-            
-            <View style={styles.content}>
-                <Text style={styles.title}>Create Password</Text>
-                <Text style={styles.subtitle}>
-                    This password will unlock your Cryptooly wallet only on this service
-                </Text>
-
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Email"
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        placeholderTextColor="#666"
-                    />
-                </View>
-
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="New password"
-                        secureTextEntry={!showPassword}
-                        value={password}
-                        onChangeText={setPassword}
-                        placeholderTextColor="#666"
-                    />
-                    <TouchableOpacity
-                        style={styles.eyeIcon}
-                        onPress={() => setShowPassword(!showPassword)}
-                    >
-                        <Feather name={showPassword ? "eye" : "eye-off"} size={24} color="#666" />
-                    </TouchableOpacity>
-                </View>
-
-                <Text style={[styles.strengthText, { color: passwordStrength === 'Good' ? '#4CAF50' : '#666' }]}>
-                    Password strength: {passwordStrength}
-                </Text>
-
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Confirm password"
-                        secureTextEntry={!showPassword}
-                        value={confirmPassword}
-                        onChangeText={setConfirmPassword}
-                        placeholderTextColor="#666"
-                    />
-                    {confirmPassword && password === confirmPassword && (
-                        <View style={styles.checkIcon}>
-                            <Feather name="check" size={24} color="#4CAF50" />
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                    <View style={styles.header}>
+                        <View style={styles.progressBar}>
+                            <View style={[styles.progress, { width: '33%' }]} />
                         </View>
-                    )}
-                </View>
+                        <Text style={styles.headerText}>Step 1 of 3</Text>
+                    </View>
+                    
+                    <View style={styles.content}>
+                        <Text style={styles.title}>Create Account</Text>
+                        <Text style={styles.subtitle}>
+                            This password will unlock your crypto wallet only on this service
+                        </Text>
 
-                <Text style={styles.requirement}>Must be at least 8 characters</Text>
+                        <View style={styles.inputContainer}>
+                            <TextInput
+                                style={[styles.input, emailError && styles.inputError]}
+                                placeholder="Email"
+                                value={email}
+                                onChangeText={(text) => {
+                                    setEmail(text);
+                                    validateEmail(text);
+                                }}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                placeholderTextColor="#666"
+                            />
+                            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+                        </View>
 
-                <View style={styles.faceIdContainer}>
-                    <Text style={styles.faceIdText}>Sign in with Face ID?</Text>
-                    <Switch
-                        value={faceIdEnabled}
-                        onValueChange={handleFaceIdToggle}
-                        trackColor={{ false: '#767577', true: '#000' }}
-                        thumbColor={faceIdEnabled ? '#4CAF50' : '#f4f3f4'}
-                    />
-                </View>
+                        <View style={styles.inputContainer}>
+                            <TextInput
+                                style={[styles.input, passwordError && styles.inputError]}
+                                placeholder="New password"
+                                secureTextEntry={!showPassword}
+                                value={password}
+                                onChangeText={(text) => {
+                                    setPassword(text);
+                                    validatePassword(text);
+                                }}
+                                placeholderTextColor="#666"
+                            />
+                            <TouchableOpacity
+                                style={styles.eyeIcon}
+                                onPress={() => setShowPassword(!showPassword)}
+                            >
+                                <Feather name={showPassword ? "eye" : "eye-off"} size={24} color="#666" />
+                            </TouchableOpacity>
+                            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+                        </View>
 
-                <View style={styles.checkboxContainer}>
-                    <Checkbox
-                        checked={understood}
-                        onPress={() => setUnderstood(!understood)}
-                    />
-                    <Text style={styles.checkboxText}>
-                        I understand that Cryptooly cannot recover this password for me.{' '}
-                        <Text style={styles.learnMore}>Learn more</Text>
-                    </Text>
-                </View>
+                        {password.length > 0 && (
+                            <Text style={[styles.strengthText, { color: passwordStrength === 'Good' ? '#7B61FF' : '#FF6347' }]}>
+                                Password strength: {passwordStrength}
+                            </Text>
+                        )}
 
-                <TouchableOpacity
-                    style={[styles.button, !understood && styles.buttonDisabled]}
-                    disabled={!understood}
-                    onPress={() => navigation.navigate('SecureWallet')}
-                >
-                    <Text style={styles.buttonText}>Create Password</Text>
-                </TouchableOpacity>
+                        <View style={styles.inputContainer}>
+                            <TextInput
+                                style={[styles.input, confirmPasswordError && styles.inputError]}
+                                placeholder="Confirm password"
+                                secureTextEntry={!showPassword}
+                                value={confirmPassword}
+                                onChangeText={(text) => {
+                                    setConfirmPassword(text);
+                                    validateConfirmPassword(text);
+                                }}
+                                placeholderTextColor="#666"
+                            />
+                            {confirmPassword && password === confirmPassword && (
+                                <View style={styles.checkIcon}>
+                                    <Feather name="check" size={24} color="#7B61FF" />
+                                </View>
+                            )}
+                            {confirmPasswordError ? <Text style={styles.errorText}>{confirmPasswordError}</Text> : null}
+                        </View>
 
-                <TouchableOpacity
-                    style={styles.loginButton}
-                    onPress={() => setShowLoginModal(true)}
-                >
-                    <Text style={styles.loginButtonText}>Already have an account? Login</Text>
-                </TouchableOpacity>
-            </View>
+                        <Text style={styles.requirement}>Must be at least 8 characters</Text>
 
+                        <View style={styles.faceIdContainer}>
+                            <Text style={styles.faceIdText}>Sign in with Face ID?</Text>
+                            <Switch
+                                value={faceIdEnabled}
+                                onValueChange={handleFaceIdToggle}
+                                trackColor={{ false: '#767577', true: '#7B61FF' }}
+                                thumbColor={faceIdEnabled ? '#fff' : '#f4f3f4'}
+                            />
+                        </View>
+
+                        <View style={styles.checkboxContainer}>
+                            <Checkbox
+                                checked={understood}
+                                onPress={() => setUnderstood(!understood)}
+                            />
+                            <Text style={styles.checkboxText}>
+                                I understand that Cryptooly cannot recover this password for me.{' '}
+                                <Text style={styles.learnMore}>Learn more</Text>
+                            </Text>
+                        </View>
+
+                        <TouchableOpacity
+                            style={[styles.button, !understood && styles.buttonDisabled]}
+                            disabled={!understood}
+                            onPress={() => navigation.navigate('SecureWallet')}
+                        >
+                            <Text style={styles.buttonText}>Create Account</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.loginButton}
+                            onPress={() => setShowLoginModal(true)}
+                        >
+                            <Text style={styles.loginButtonText}>Already have an account? Login</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+            </TouchableWithoutFeedback>
             {renderLoginModal()}
         </SafeAreaView>
     );
@@ -209,25 +253,44 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
+    scrollViewContent: {
+        flexGrow: 1,
+    },
     header: {
         padding: 16,
-        alignItems: 'flex-end',
+        alignItems: 'center',
+    },
+    progressBar: {
+        width: '100%',
+        height: 4,
+        backgroundColor: '#E0E0E0',
+        borderRadius: 2,
+        marginBottom: 8,
+    },
+    progress: {
+        height: '100%',
+        backgroundColor: '#7B61FF',
+        borderRadius: 2,
     },
     headerText: {
         color: '#666',
+        fontSize: 14,
     },
     content: {
         flex: 1,
         padding: 24,
+        paddingTop: 40,
     },
     title: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
-        marginBottom: 8,
+        marginBottom: 12,
+        color: '#333',
     },
     subtitle: {
         color: '#666',
-        marginBottom: 24,
+        marginBottom: 32,
+        fontSize: 16,
     },
     inputContainer: {
         marginBottom: 16,
@@ -236,9 +299,18 @@ const styles = StyleSheet.create({
     input: {
         borderWidth: 1,
         borderColor: '#E0E0E0',
-        borderRadius: 8,
+        borderRadius: 12,
         padding: 16,
         fontSize: 16,
+        backgroundColor: '#F5F5F5',
+    },
+    inputError: {
+        borderColor: '#FF6347',
+    },
+    errorText: {
+        color: '#FF6347',
+        fontSize: 14,
+        marginTop: 4,
     },
     eyeIcon: {
         position: 'absolute',
@@ -252,10 +324,12 @@ const styles = StyleSheet.create({
     },
     strengthText: {
         marginBottom: 16,
+        fontSize: 14,
     },
     requirement: {
         color: '#666',
         marginBottom: 24,
+        fontSize: 14,
     },
     faceIdContainer: {
         flexDirection: 'row',
@@ -277,76 +351,93 @@ const styles = StyleSheet.create({
         color: '#666',
     },
     learnMore: {
-        color: '#2196F3',
+        color: '#7B61FF',
         textDecorationLine: 'underline',
     },
     button: {
-        backgroundColor: '#000',
-        borderRadius: 8,
-        padding: 16,
+        backgroundColor: '#7B61FF',
+        borderRadius: 12,
+        padding: 18,
         alignItems: 'center',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
     },
     buttonDisabled: {
         opacity: 0.5,
     },
     buttonText: {
         color: '#fff',
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: '600',
     },
     loginButton: {
-        marginTop: 16,
+        marginTop: 24,
         alignItems: 'center',
+        padding: 12,
     },
     loginButtonText: {
-        color: '#2196F3',
+        color: '#7B61FF',
         fontSize: 16,
+        fontWeight: '600',
     },
     modalContainer: {
         flex: 1,
         justifyContent: 'flex-end',
-        alignItems: 'end',
+        alignItems: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContent: {
         backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 24,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 32,
         width: '100%',
         paddingBottom: '50%',
-        paddingTop: '5%',
+        paddingTop: '8%',
     },
     modalTitle: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 16,
+        marginBottom: 24,
+        color: '#333',
     },
     modalInput: {
         borderWidth: 1,
         borderColor: '#E0E0E0',
-        borderRadius: 8,
-        padding: 12,
+        borderRadius: 12,
+        padding: 16,
         fontSize: 16,
-        marginBottom: 16,
+        marginBottom: 20,
+        backgroundColor: '#F5F5F5',
     },
     modalButton: {
-        backgroundColor: '#000',
-        borderRadius: 8,
-        padding: 12,
+        backgroundColor: '#7B61FF',
+        borderRadius: 12,
+        padding: 16,
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: 16,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
     },
     modalButtonText: {
         color: '#fff',
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: '600',
     },
     modalCloseButton: {
         alignItems: 'center',
+        padding: 12,
     },
     modalCloseButtonText: {
         color: '#666',
         fontSize: 16,
+        fontWeight: '600',
     },
 });
 

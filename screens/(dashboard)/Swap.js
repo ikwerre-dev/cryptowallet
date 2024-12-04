@@ -267,6 +267,7 @@ const styles = StyleSheet.create({
   currencyInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10
   },
   currencyIcon: {
     fontSize: 24,

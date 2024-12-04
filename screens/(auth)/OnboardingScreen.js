@@ -27,7 +27,7 @@ export default function OnboardingScreen({ navigation }) {
                     onPress={() => navigation.navigate('Register')}
                 >
                     <LinearGradient
-                        colors={['#4AFEBA', '#28E0B1']}
+                        colors={['#7B61FF', '#28E0B1']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={styles.gradient}
