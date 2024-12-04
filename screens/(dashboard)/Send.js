@@ -11,11 +11,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-// import { RNCamera } from 'react-native-camera';
 import { MotiView } from 'moti';
 import { Easing } from 'react-native-reanimated';
 import * as Notifications from 'expo-notifications';
- 
+import { Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { SafeAreaView } from 'react-native';
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -89,7 +90,7 @@ export default function SendScreen({ navigation }) {
       },
       trigger: null,
     });
-    
+
     setShowSuccess(true);
     setTimeout(() => {
       setShowSuccess(false);
@@ -106,7 +107,7 @@ export default function SendScreen({ navigation }) {
 
   const renderStep1 = () => (
     <View style={styles.container}>
-      
+
       <Text style={styles.label}>Send To</Text>
       <View style={styles.inputContainer}>
         <TextInput
@@ -226,125 +227,132 @@ export default function SendScreen({ navigation }) {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Send</Text>
-        <View style={{ width: 24 }} />
-      </View>
 
-      {step === 1 ? renderStep1() : renderStep2()}
+    <SafeAreaView style={styles.container}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
+          <View style={styles.container}>
+            <View style={styles.header}>
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Ionicons name="arrow-back" size={24} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Send</Text>
+              <View style={{ width: 24 }} />
+            </View>
 
-      {/* QR Scanner Modal */}
-      <Modal visible={showScanner} animationType="slide">
-        <View style={styles.scannerContainer}>
-          {/* <RNCamera
+            {step === 1 ? renderStep1() : renderStep2()}
+
+            {/* QR Scanner Modal */}
+            <Modal visible={showScanner} animationType="slide">
+              <View style={styles.scannerContainer}>
+                {/* <RNCamera
             ref={cameraRef}
             style={StyleSheet.absoluteFillObject}
             type={RNCamera.Constants.Type.back}
             onBarCodeRead={handleBarCodeScanned}
             captureAudio={false}
           /> */}
-          <TouchableOpacity
-            style={styles.closeScannerButton}
-            onPress={() => setShowScanner(false)}
-          >
-            <Ionicons name="close" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </Modal>
-
-      {/* Token Selection Modal */}
-      <Modal
-        visible={showTokenModal}
-        animationType="slide"
-        transparent={true}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Token</Text>
-              <TouchableOpacity onPress={() => setShowTokenModal(false)}>
-                <Ionicons name="close" size={24} color="#fff" />
-              </TouchableOpacity>
-            </View>
-
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search token"
-              placeholderTextColor="#666"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-
-            <ScrollView style={styles.tokenList}>
-              {filteredTokens.map((token) => (
                 <TouchableOpacity
-                  key={token.symbol}
-                  style={styles.tokenItem}
-                  onPress={() => {
-                    setSelectedToken(token);
-                    setShowTokenModal(false);
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }}
+                  style={styles.closeScannerButton}
+                  onPress={() => setShowScanner(false)}
                 >
-                  <View style={styles.tokenInfo}>
-                    <Text style={styles.tokenIcon}>{token.icon}</Text>
-                    <View>
-                      <Text style={styles.tokenSymbol}>{token.symbol}</Text>
-                      <Text style={styles.tokenName}>{token.name}</Text>
-                    </View>
-                  </View>
-                  <View>
-                    <Text style={styles.tokenBalance}>{token.balance}</Text>
-                    <Text style={styles.tokenValue}>{token.value}</Text>
-                  </View>
+                  <Ionicons name="close" size={24} color="#fff" />
                 </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+              </View>
+            </Modal>
 
-      {/* Success Modal */}
-      <Modal
-        visible={showSuccess}
-        transparent={true}
-        animationType="fade"
-      >
-        <View style={styles.successModal}>
-          <MotiView
-            from={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{
-              type: 'timing',
-              duration: 500,
-              easing: Easing.out(Easing.ease),
-            }}
-            style={styles.successContent}
-          >
-            <View style={styles.successIcon}>
-              <Ionicons name="checkmark" size={48} color="#7B61FF" />
-            </View>
-            <Text style={styles.successTitle}>Transaction Confirmed</Text>
-            <Text style={styles.successMessage}>
-              Your transaction has been successfully processed
-            </Text>
-            <TouchableOpacity
-              style={styles.successButton}
-              onPress={() => {
-                setShowSuccess(false);
-                navigation.goBack();
-              }}
+            {/* Token Selection Modal */}
+            <Modal
+              visible={showTokenModal}
+              animationType="slide"
+              transparent={true}
             >
-              <Text style={styles.successButtonText}>Done</Text>
-            </TouchableOpacity>
-          </MotiView>
-        </View>
-      </Modal>
-    </View>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>Select Token</Text>
+                    <TouchableOpacity onPress={() => setShowTokenModal(false)}>
+                      <Ionicons name="close" size={24} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search token"
+                    placeholderTextColor="#666"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                  />
+
+                  <ScrollView style={styles.tokenList}>
+                    {filteredTokens.map((token) => (
+                      <TouchableOpacity
+                        key={token.symbol}
+                        style={styles.tokenItem}
+                        onPress={() => {
+                          setSelectedToken(token);
+                          setShowTokenModal(false);
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        }}
+                      >
+                        <View style={styles.tokenInfo}>
+                          <Text style={styles.tokenIcon}>{token.icon}</Text>
+                          <View>
+                            <Text style={styles.tokenSymbol}>{token.symbol}</Text>
+                            <Text style={styles.tokenName}>{token.name}</Text>
+                          </View>
+                        </View>
+                        <View>
+                          <Text style={styles.tokenBalance}>{token.balance}</Text>
+                          <Text style={styles.tokenValue}>{token.value}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              </View>
+            </Modal>
+
+            {/* Success Modal */}
+            <Modal
+              visible={showSuccess}
+              transparent={true}
+              animationType="fade"
+            >
+              <View style={styles.successModal}>
+                <MotiView
+                  from={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{
+                    type: 'timing',
+                    duration: 500,
+                    easing: Easing.out(Easing.ease),
+                  }}
+                  style={styles.successContent}
+                >
+                  <View style={styles.successIcon}>
+                    <Ionicons name="checkmark" size={48} color="#7B61FF" />
+                  </View>
+                  <Text style={styles.successTitle}>Transaction Confirmed</Text>
+                  <Text style={styles.successMessage}>
+                    Your transaction has been successfully processed
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.successButton}
+                    onPress={() => {
+                      setShowSuccess(false);
+                      navigation.goBack();
+                    }}
+                  >
+                    <Text style={styles.successButtonText}>Done</Text>
+                  </TouchableOpacity>
+                </MotiView>
+              </View>
+            </Modal>
+          </View>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </SafeAreaView>
   );
 }
 
@@ -352,15 +360,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
-    paddingTop: 10,
+    // paddingTop: 10,
 
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
-    paddingTop: 50,
+    paddingVertical: 16,
+    paddingTop: 0
+    // paddingTop: 50,
   },
   headerTitle: {
     fontSize: 20,
@@ -371,7 +380,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     marginBottom: 0,
-    marginTop:10,
+    marginTop: 10,
     paddingHorizontal: 16,
   },
   inputContainer: {
@@ -629,6 +638,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
   },
 });
 

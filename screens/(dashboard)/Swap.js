@@ -21,6 +21,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Keyboard, TouchableWithoutFeedback } from 'react-native';
 
 const currencies = [
   { symbol: 'BTC', name: 'Bitcoin', balance: 0.5, fallbackIcon: '₿' },
@@ -138,7 +140,10 @@ export default function SwapScreen({ navigation }) {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+              <View style={{flex: 1}}>
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -220,7 +225,10 @@ export default function SwapScreen({ navigation }) {
 
       {renderCurrencyModal(true)}
       {renderCurrencyModal(false)}
-    </View>
+      </View>
+      </TouchableWithoutFeedback>
+
+    </SafeAreaView>
   );
 }
 
@@ -234,7 +242,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
-    paddingTop: 50,
+    // paddingTop: 50,
   },
   headerTitle: {
     fontSize: 20,

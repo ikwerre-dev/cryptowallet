@@ -81,7 +81,7 @@ export default function DashboardScreen() {
     const [showBalance, setShowBalance] = React.useState(true);
     const [shakeCount, setShakeCount] = useState(0);
     const [lastShakeTime, setLastShakeTime] = useState(0);
-  
+
     const toggleBalanceVisibility = () => {
         setShowBalance(!showBalance);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
@@ -95,55 +95,57 @@ export default function DashboardScreen() {
     };
     const handleButtonPress = (action) => {
         console.log(`${action} button pressed`);
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          navigation.navigate(action);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        navigation.navigate(action);
 
-       };
+    };
 
-       useEffect(() => {
+    useEffect(() => {
         const subscription = Accelerometer.addListener((accelerometerData) => {
-          const { x, y, z } = accelerometerData;
-    
-          // Calculate shake magnitude
-          const magnitude = Math.sqrt(x * x + y * y + z * z);
-          const shakeThreshold = 2; // Adjust this value if necessary
-          const currentTime = Date.now();
-    
-          // Detect shake and check the time difference for double shake
-          if (magnitude > shakeThreshold) {
-            if (currentTime - lastShakeTime < 1000) { // 1 second window for double shake
-              setShakeCount(shakeCount + 1);
-            } else {
-              setShakeCount(1); // reset count if shake is too far apart
+            const { x, y, z } = accelerometerData;
+
+            // Calculate shake magnitude
+            const magnitude = Math.sqrt(x * x + y * y + z * z);
+            const shakeThreshold = 2; // Adjust this value if necessary
+            const currentTime = Date.now();
+
+            // Detect shake and check the time difference for double shake
+            if (magnitude > shakeThreshold) {
+                if (currentTime - lastShakeTime < 1000) { // 1 second window for double shake
+                    setShakeCount(shakeCount + 1);
+                } else {
+                    setShakeCount(1); // reset count if shake is too far apart
+                }
+
+                setLastShakeTime(currentTime);
             }
-    
-            setLastShakeTime(currentTime);
-          }
-    
-          // If double shake is detected, toggle the balance visibility
-          if (shakeCount >= 2) {
-            toggleBalanceVisibility();
-            setShakeCount(0); // Reset shake count after action
-          }
+
+            // If double shake is detected, toggle the balance visibility
+            if (shakeCount >= 2) {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+                toggleBalanceVisibility();
+                setShakeCount(0); // Reset shake count after action
+            }
         });
-    
+
         // Set update interval for accelerometer (100ms)
         Accelerometer.setUpdateInterval(100);
-    
+
         // Cleanup the subscription when the component unmounts
         return () => subscription.remove();
-      }, [shakeCount, lastShakeTime]); // Dependencies on shakeCount and lastShakeTime
-    
+    }, [shakeCount, lastShakeTime]); // Dependencies on shakeCount and lastShakeTime
 
-       
+
+
     //   useEffect(() => {
     //     const interval = setInterval(() => {
     //       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     //     }, 2000);
-    
+
     //     return () => clearInterval(interval);
     //   }, []);
-    
+
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView>
@@ -159,7 +161,7 @@ export default function DashboardScreen() {
 
                 <View style={styles.balance}>
                     <Text style={styles.balanceLabel}>Portfolio Balance</Text>
-                    <TouchableOpacity  onPress={toggleBalanceVisibility} style={styles.balanceRow}>
+                    <TouchableOpacity onPress={toggleBalanceVisibility} style={styles.balanceRow}>
                         {showBalance ? (
                             <Text style={styles.balanceAmount}>$12,550.50</Text>
                         ) : (
@@ -182,7 +184,7 @@ export default function DashboardScreen() {
                         style={styles.button}
                         onPress={() => handleButtonPress('Receive')}
                     >
-                        <Text style={styles.buttonText}><ArrowDown color={'white'}  /></Text>
+                        <Text style={styles.buttonText}><ArrowDown color={'white'} /></Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -274,14 +276,14 @@ const styles = StyleSheet.create({
 
     },
     buttonContainer: {
-         flexDirection: 'row',
+        flexDirection: 'row',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         paddingHorizontal: 16,
-        paddingVertical:5
+        paddingVertical: 5
 
-      },
-      button: {
+    },
+    button: {
         backgroundColor: '#121212',
         paddingVertical: 15,
         paddingHorizontal: 30,
@@ -289,12 +291,12 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         width: '30%',  // This makes each button 1/3 of the row width
         alignItems: 'center',
-      },
-      buttonText: {
+    },
+    buttonText: {
         fontSize: 18,
         fontWeight: 'bold',
         color: '#fff',
-      },
+    },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
