@@ -106,6 +106,7 @@ export default function SendScreen({ navigation }) {
 
   const renderStep1 = () => (
     <View style={styles.container}>
+      
       <Text style={styles.label}>Send To</Text>
       <View style={styles.inputContainer}>
         <TextInput
