@@ -6,6 +6,8 @@ import { LineChart } from 'react-native-chart-kit';
 import { Bell, X, Eye, EyeOff, ArrowRight, ArrowDown, ArrowUp, Repeat } from 'react-native-feather';
 import * as Haptics from 'expo-haptics';
 import { Accelerometer } from 'expo-sensors';
+import { StatusBar } from 'react-native';
+import { Platform } from 'react-native';
 
 const cryptoData = [
     { symbol: "BTC", name: "Bitcoin", price: 6780, change: 11.75 },
@@ -147,91 +149,93 @@ export default function DashboardScreen() {
     //   }, []);
 
     return (
-        <SafeAreaView style={styles.container}>
-            <ScrollView>
-                <View style={styles.header}>
-                    <Image
-                        source={{ uri: 'https://i.pravatar.cc/150?img=14' }}
-                        style={styles.avatar}
-                    />
-                    <TouchableOpacity onPress={handleNotificationPress}>
-                        <Bell stroke="#fff" width={24} height={24} />
-                    </TouchableOpacity>
-                </View>
+        <>
+    
+      <SafeAreaView style={styles.container}>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                    <View style={styles.header}>
+                        <Image
+                            source={{ uri: 'https://i.pravatar.cc/150?img=14' }}
+                            style={styles.avatar}
+                        />
+                        <TouchableOpacity onPress={handleNotificationPress}>
+                            <Bell stroke="#fff" width={24} height={24} />
+                        </TouchableOpacity>
+                    </View>
 
-                <View style={styles.balance}>
-                    <Text style={styles.balanceLabel}>Portfolio Balance</Text>
-                    <TouchableOpacity onPress={toggleBalanceVisibility} style={styles.balanceRow}>
-                        {showBalance ? (
-                            <Text style={styles.balanceAmount}>$12,550.50</Text>
-                        ) : (
-                            <Text style={styles.balanceAmount}>•••••••</Text>
-                        )}
-                        <TouchableOpacity onPress={toggleBalanceVisibility}>
+                    <View style={styles.balance}>
+                        <Text style={styles.balanceLabel}>Portfolio Balance</Text>
+                        <TouchableOpacity onPress={toggleBalanceVisibility} style={styles.balanceRow}>
                             {showBalance ? (
-                                <Eye stroke="#fff" width={24} height={24} style={styles.eyeIcon} />
+                                <Text style={styles.balanceAmount}>$12,550.50</Text>
                             ) : (
-                                <EyeOff stroke="#fff" width={24} height={24} style={styles.eyeIcon} />
+                                <Text style={styles.balanceAmount}>•••••••</Text>
                             )}
+                            <TouchableOpacity onPress={toggleBalanceVisibility}>
+                                {showBalance ? (
+                                    <Eye stroke="#fff" width={24} height={24} style={styles.eyeIcon} />
+                                ) : (
+                                    <EyeOff stroke="#fff" width={24} height={24} style={styles.eyeIcon} />
+                                )}
+                            </TouchableOpacity>
                         </TouchableOpacity>
-                    </TouchableOpacity>
-                    <View style={styles.balanceChange}>
-                        <Text style={styles.balanceChangeText}>↑ 10.75%</Text>
+                        <View style={styles.balanceChange}>
+                            <Text style={styles.balanceChangeText}>↑ 10.75%</Text>
+                        </View>
                     </View>
-                </View>
-                <View style={styles.buttonContainer}>
-                    <TouchableOpacity
-                        style={styles.button}
-                        onPress={() => handleButtonPress('Receive')}
-                    >
-                        <Text style={styles.buttonText}><ArrowDown color={'white'} /></Text>
-                    </TouchableOpacity>
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={() => handleButtonPress('Receive')}
+                        >
+                            <Text style={styles.buttonText}><ArrowDown color={'white'} /></Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={styles.button}
-                        onPress={() => handleButtonPress('Send')}
-                    >
-                        <Text style={styles.buttonText}><ArrowUp color={'white'} /></Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={() => handleButtonPress('Send')}
+                        >
+                            <Text style={styles.buttonText}><ArrowUp color={'white'} /></Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={styles.button}
-                        onPress={() => handleButtonPress('Swap')}
-                    >
-                        <Text style={styles.buttonText}><Repeat color={'white'} /></Text>
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.portfolio}>
-                    <View style={styles.portfolioHeader}>
-                        <Text style={styles.portfolioTitle}>Pinned Portfolio</Text>
-                        <TouchableOpacity style={styles.filtertouchableContainer}>
-                            <Text style={styles.portfolioFilter}>
-                                View All
-                            </Text>
-                            <ArrowRight width={15} />
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={() => handleButtonPress('Swap')}
+                        >
+                            <Text style={styles.buttonText}><Repeat color={'white'} /></Text>
                         </TouchableOpacity>
                     </View>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
 
-                        {cryptoData.slice(0, 2).map((crypto) => (
-                            <CryptoCard
-                                key={crypto.symbol}
-                                symbol={crypto.symbol}
-                                name={crypto.name}
-                                price={crypto.price}
-                                change={crypto.change}
-                                color="#7B61FF"
+                    <View style={styles.portfolio}>
+                        <View style={styles.portfolioHeader}>
+                            <Text style={styles.portfolioTitle}>Pinned Portfolio</Text>
+                            <TouchableOpacity style={styles.filtertouchableContainer}>
+                                <Text style={styles.portfolioFilter}>
+                                    View All
+                                </Text>
+                                <ArrowRight width={15} />
+                            </TouchableOpacity>
+                        </View>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
 
-                                onPress={() => handlePortfolioPress(crypto)}
-                            />
-                        ))}
+                            {cryptoData.slice(0, 2).map((crypto) => (
+                                <CryptoCard
+                                    key={crypto.symbol}
+                                    symbol={crypto.symbol}
+                                    name={crypto.name}
+                                    price={crypto.price}
+                                    change={crypto.change}
+                                    color="#7B61FF"
 
-                    </ScrollView>
-                </View>
+                                    onPress={() => handlePortfolioPress(crypto)}
+                                />
+                            ))}
+
+                        </ScrollView>
+                    </View>
 
 
-                {/* <View style={styles.referral}>
+                    {/* <View style={styles.referral}>
                     <View style={styles.referralContent}>
                         <View>
                             <Text style={styles.referralTitle}>Connect for Interlinking</Text>
@@ -246,24 +250,25 @@ export default function DashboardScreen() {
                     </TouchableOpacity>
                 </View> */}
 
-                <View style={styles.market}>
-                    <Text style={styles.marketTitle}>My Portfolio</Text>
-                    {cryptoData.map((crypto) => (
+                    <View style={styles.market}>
+                        <Text style={styles.marketTitle}>My Portfolio</Text>
+                        {cryptoData.map((crypto) => (
 
-                        <MarketItem
-                            key={crypto.symbol}
-                            symbol={crypto.symbol}
-                            name={crypto.name}
-                            price={crypto.price}
-                            change={crypto.change}
-                            onPress={() => handlePortfolioPress(crypto)}
-                            chartData={[40, 45, 35, 50, 49, 60, 70, 91, 85, 87, 80, 75, 85]}
-                        />
-                    ))}
+                            <MarketItem
+                                key={crypto.symbol}
+                                symbol={crypto.symbol}
+                                name={crypto.name}
+                                price={crypto.price}
+                                change={crypto.change}
+                                onPress={() => handlePortfolioPress(crypto)}
+                                chartData={[40, 45, 35, 50, 49, 60, 70, 91, 85, 87, 80, 75, 85]}
+                            />
+                        ))}
 
-                </View>
-            </ScrollView>
-        </SafeAreaView>
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
+        </>
     );
 }
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
+import { Platform, StatusBar } from 'react-native'; // Import StatusBar and Platform
 import { Home, PieChart, RefreshCw, BarChart2, Settings, MoreHorizontal } from 'react-native-feather';
 import DashboardScreen from '../screens/(dashboard)/Dashboard.js';
 import CoinDetailScreen from '../screens/(dashboard)/CoinDetailScreen';
@@ -21,154 +22,145 @@ const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 function DashboardStack() {
-    return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Dashboard" component={DashboardScreen} />
-            <Stack.Screen name="CoinDetailScreen" component={CoinDetailScreen} />
-            <Stack.Screen name="Receive" component={ReceiveScreen} />
-            <Stack.Screen name="Send" component={SendScreen} />
-            <Stack.Screen name="Swap" component={SwapScreen} />
-            <Stack.Screen name="Notification" options={{
-                headerStyle: {
-                    backgroundColor: '#000',
-                },
-                headerTintColor: '#fff',
-                headerShown: true
-            }} component={NotificationScreen} />
-
-        </Stack.Navigator>
-    );
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Dashboard" component={DashboardScreen} />
+      <Stack.Screen name="CoinDetailScreen" component={CoinDetailScreen} />
+      <Stack.Screen name="Receive" component={ReceiveScreen} />
+      <Stack.Screen name="Send" component={SendScreen} />
+      <Stack.Screen name="Swap" component={SwapScreen} />
+      <Stack.Screen
+        name="Notification"
+        options={{
+          headerStyle: {
+            backgroundColor: '#000',
+          },
+          headerTintColor: '#fff',
+          headerShown: true,
+        }}
+        component={NotificationScreen}
+      />
+    </Stack.Navigator>
+  );
 }
-
 
 function PortfolioStack() {
-    return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Portfolio" component={PortfolioScreen} />
-            <Stack.Screen name="CoinDetailScreen" component={CoinDetailScreen} />
-        </Stack.Navigator>
-    );
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Portfolio" component={PortfolioScreen} />
+      <Stack.Screen name="CoinDetailScreen" component={CoinDetailScreen} />
+    </Stack.Navigator>
+  );
 }
 
-
 function MenuStack() {
-    return (
-        <Stack.Navigator>
-            <Stack.Screen
-                name="Menu"
-                options={{ headerShown: false }}
-                component={MenuScreen}
-            />
-            <Stack.Screen
-                name="Portfolio"
-                component={PortfolioStack}
-                options={{
-                    headerStyle: {
-                        backgroundColor: '#000',
-                    },
-                    headerTintColor: '#fff', // Ensures the text/icon color is visible on black
-                }}
-            />
-            <Stack.Screen
-                name="Support"
-                component={SupportScreen}
-                options={{
-                    headerStyle: {
-                        backgroundColor: '#000',
-                    },
-                    headerTintColor: '#fff',
-                }}
-            />
-            <Stack.Screen
-                name="Terms"
-                component={TermsScreen}
-                options={{
-                    headerStyle: {
-                        backgroundColor: '#000',
-                    },
-                    headerTintColor: '#fff',
-                }}
-            />
-            <Stack.Screen
-                name="Transactions"
-                component={TransactionsScreen}
-                options={{
-                    headerStyle: {
-                        backgroundColor: '#000',
-                    },
-                    headerTintColor: '#fff',
-                }}
-            />
-
-            <Stack.Screen
-                name="Profile"
-                component={PersonalDetailsScreen}
-                options={{ headerShown: false }}
-
-            />
-        </Stack.Navigator>
-
-    );
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Menu"
+        options={{ headerShown: false }}
+        component={MenuScreen}
+      />
+      <Stack.Screen
+        name="Portfolio"
+        component={PortfolioStack}
+        options={{
+          headerStyle: {
+            backgroundColor: '#000',
+          },
+          headerTintColor: '#fff',
+        }}
+      />
+      <Stack.Screen
+        name="Support"
+        component={SupportScreen}
+        options={{
+          headerStyle: {
+            backgroundColor: '#000',
+          },
+          headerTintColor: '#fff',
+        }}
+      />
+      <Stack.Screen
+        name="Terms"
+        component={TermsScreen}
+        options={{
+          headerStyle: {
+            backgroundColor: '#000',
+          },
+          headerTintColor: '#fff',
+        }}
+      />
+      <Stack.Screen
+        name="Transactions"
+        component={TransactionsScreen}
+        options={{
+          headerStyle: {
+            backgroundColor: '#000',
+          },
+          headerTintColor: '#fff',
+        }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={PersonalDetailsScreen}
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
+  );
 }
 
 export default function BottomTabNavigator() {
-    return (
-        <Tab.Navigator
-            screenOptions={{
-                headerShown: false,
-                tabBarStyle: {
-                    backgroundColor: '#000',
-                    borderTopColor: '#222',
-                },
-                tabBarActiveTintColor: '#7B61FF',
-                tabBarInactiveTintColor: '#666',
-            }}
-        >
-            <Tab.Screen
-                name="Home"
-                component={DashboardStack} // Use the stack navigator here
-                options={{
-                    tabBarIcon: ({ color }) => (
-                        <Home stroke={color} width={24} height={24} />
-                    ),
-                }}
-            />
-            <Tab.Screen
-                name="My Assets"
-                component={PortfolioStack}
-                options={{
-                    tabBarIcon: ({ color }) => (
-                        <PieChart stroke={color} width={24} height={24} />
-                    ),
-                }}
-            />
-            <Tab.Screen
-                name="P2P"
-                component={P2PTransferScreen}
-                options={{
-                    tabBarIcon: ({ color }) => (
-                        <RefreshCw stroke={color} width={24} height={24} />
-                    ),
-                }}
-            />
-            <Tab.Screen
-                name="Markets"
-                component={TradingViewWidget}
-                options={{
-                    tabBarIcon: ({ color }) => (
-                        <BarChart2 stroke={color} width={24} height={24} />
-                    ),
-                }}
-            />
-            <Tab.Screen
-                name="More"
-                component={MenuStack}
-                options={{
-                    tabBarIcon: ({ color }) => (
-                        <MoreHorizontal stroke={color} width={24} height={24} />
-                    ),
-                }}
-            />
-        </Tab.Navigator>
-    );
+  return (
+    <>
+      {Platform.OS === 'android' && <StatusBar hidden={true} />}
+      <Tab.Navigator
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: {
+            backgroundColor: '#000',
+            borderTopColor: '#222',
+          },
+          tabBarActiveTintColor: '#7B61FF',
+          tabBarInactiveTintColor: '#666',
+        }}
+      >
+        <Tab.Screen
+          name="Home"
+          component={DashboardStack}
+          options={{
+            tabBarIcon: ({ color }) => <Home stroke={color} width={24} height={24} />,
+          }}
+        />
+        <Tab.Screen
+          name="My Assets"
+          component={PortfolioStack}
+          options={{
+            tabBarIcon: ({ color }) => <PieChart stroke={color} width={24} height={24} />,
+          }}
+        />
+        <Tab.Screen
+          name="P2P"
+          component={P2PTransferScreen}
+          options={{
+            tabBarIcon: ({ color }) => <RefreshCw stroke={color} width={24} height={24} />,
+          }}
+        />
+        <Tab.Screen
+          name="Markets"
+          component={TradingViewWidget}
+          options={{
+            tabBarIcon: ({ color }) => <BarChart2 stroke={color} width={24} height={24} />,
+          }}
+        />
+        <Tab.Screen
+          name="More"
+          component={MenuStack}
+          options={{
+            tabBarIcon: ({ color }) => <MoreHorizontal stroke={color} width={24} height={24} />,
+          }}
+        />
+      </Tab.Navigator>
+    </>
+  );
 }
