@@ -1,16 +1,29 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../../context/AuthContext';
 
 export default function SecureWalletScreen({ navigation }) {
+    const { login } = useAuth();
+    const SkipSignup = async () => {
+        const user_id = await AsyncStorage.getItem('temp_user');
+
+
+        const token = 'randomshit'; // Replace with a token from your backend
+        login({ user_id, token });
+    }
+
+
+
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
+            {/* <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Text style={styles.backButton}>←</Text>
                 </TouchableOpacity>
                 <Text style={styles.headerText}>2/3</Text>
-            </View>
+            </View> */}
 
             <View style={styles.content}>
                 <Text style={styles.title}>Secure Your Wallet</Text>
@@ -32,7 +45,8 @@ export default function SecureWalletScreen({ navigation }) {
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity
                         style={styles.secondaryButton}
-                        onPress={() => navigation.navigate('RemindLater')}
+                        onPress={SkipSignup}
+
                     >
                         <Text style={styles.secondaryButtonText}>Remind Me Later</Text>
                     </TouchableOpacity>

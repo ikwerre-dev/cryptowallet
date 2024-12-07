@@ -5,9 +5,12 @@ import { Feather } from '@expo/vector-icons';
 import Checkbox from '../components/Checkbox';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function CreatePasswordScreen({ navigation }) {
     const [email, setEmail] = useState('');
+    const [pin, setPin] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -31,6 +34,29 @@ export default function CreatePasswordScreen({ navigation }) {
         }
     };
 
+
+
+    const createaccount = async () => {
+        const payload = {
+            email: email,
+            password: password,
+            confirm_password: confirmPassword,
+            account_pin: pin,
+        };
+
+        try {
+            const response = await axios.post('http://172.20.10.2/cryptowallet_api/register', payload);
+            console.log(response.data);
+            if (response.data.code == 201) {
+                AsyncStorage.setItem('temp_user', response.data.user_id)
+                navigation.navigate('SecureWallet')
+            } else {
+                alert(response.data.message)
+            }
+        } catch (error) {
+            console.error(error.response ? error.response.data : error.message);
+        }
+    };
     const validatePassword = (password) => {
         if (password.length < 8) {
             setPasswordError('Password must be at least 8 characters long');
@@ -98,6 +124,7 @@ export default function CreatePasswordScreen({ navigation }) {
                         autoCapitalize="none"
                         placeholderTextColor="#666"
                     />
+
                     <TextInput
                         style={styles.modalInput}
                         placeholder="Password"
@@ -133,13 +160,28 @@ export default function CreatePasswordScreen({ navigation }) {
                         </View>
                         <Text style={styles.headerText}>Step 1 of 3</Text>
                     </View>
-                    
+
                     <View style={styles.content}>
                         <Text style={styles.title}>Create Account</Text>
                         <Text style={styles.subtitle}>
                             This password will unlock your crypto wallet only on this service
                         </Text>
 
+                        <View style={styles.inputContainer}>
+                            <TextInput
+                                style={[styles.input, emailError && styles.inputError]}
+                                placeholder="Account Pin"
+                                value={pin}
+                                onChangeText={(text) => {
+                                    setPin(text);
+                                }}
+                                maxLength={4}
+                                keyboardType="numeric"
+                                enterKeyHint='next'
+                                autoCapitalize="none"
+                                placeholderTextColor="#666"
+                            />
+                        </View>
                         <View style={styles.inputContainer}>
                             <TextInput
                                 style={[styles.input, emailError && styles.inputError]}
@@ -194,6 +236,7 @@ export default function CreatePasswordScreen({ navigation }) {
                                     validateConfirmPassword(text);
                                 }}
                                 placeholderTextColor="#666"
+
                             />
                             {confirmPassword && password === confirmPassword && (
                                 <View style={styles.checkIcon}>
@@ -229,7 +272,7 @@ export default function CreatePasswordScreen({ navigation }) {
                         <TouchableOpacity
                             style={[styles.button, !understood && styles.buttonDisabled]}
                             disabled={!understood}
-                            onPress={() => navigation.navigate('SecureWallet')}
+                            onPress={createaccount}
                         >
                             <Text style={styles.buttonText}>Create Account</Text>
                         </TouchableOpacity>
