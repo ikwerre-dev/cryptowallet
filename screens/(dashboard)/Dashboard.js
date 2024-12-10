@@ -1,27 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { LineChart } from 'react-native-chart-kit';
-import { Bell, X, Eye, EyeOff, ArrowRight, ArrowDown, ArrowUp, Repeat } from 'react-native-feather';
+import { Bell, Eye, EyeOff, ArrowRight, ArrowDown, ArrowUp, Repeat } from 'react-native-feather';
 import * as Haptics from 'expo-haptics';
 import { Accelerometer } from 'expo-sensors';
-import { StatusBar } from 'react-native';
-import { Platform } from 'react-native';
-
-const cryptoData = [
-    { symbol: "BTC", name: "Bitcoin", price: 6780, change: 11.75 },
-    { symbol: "ETH", name: "Ethereum", price: 1478.1, change: 4.7 },
-    { symbol: "ADA", name: "Cardano", price: 123.77, change: 11.75 },
-    { symbol: "UNI", name: "Uniswap", price: 16.96, change: -11.75 },
-    { symbol: "USDT", name: "Tether", price: 0.98, change: 0.15 },
-];
+import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
 
 const CryptoCard = ({ symbol, name, price, change, color, onPress }) => (
     <TouchableOpacity style={[styles.cryptoCard, { backgroundColor: color }]} onPress={onPress}>
         <View style={styles.cryptoHeader}>
             <Image
-                source={{ uri: `https://cryptologos.cc/logos/${name.toLowerCase()}-${symbol.toLowerCase()}-logo.png` }}
+                source={{ uri: `https://cryptologos.cc/logos/${name.toLowerCase().replace(/\s+/g, '-')}-${symbol.toLowerCase()}-logo.png` }}
                 style={styles.cryptoIcon}
             />
             <View>
@@ -30,21 +21,19 @@ const CryptoCard = ({ symbol, name, price, change, color, onPress }) => (
             </View>
         </View>
         <View style={styles.cryptoFooter}>
-            <Text style={styles.cryptoPrice}>${price}</Text>
+            <Text style={styles.cryptoPrice}>{(price.toFixed(6))}</Text>
             <Text style={[styles.cryptoChange, { color: change >= 0 ? '#fff' : '#fff' }]}>
-                {change >= 0 ? '↑' : '↓'} {Math.abs(change)}%
+                {change >= 0 ? '↑' : '↓'}{Math.abs(change).toFixed(2)}%
             </Text>
         </View>
     </TouchableOpacity>
 );
 
-
-const MarketItem = ({ icon, name, symbol, price, change, chartData, onPress }) => {
+const MarketItem = ({ icon, name, symbol, price, balance, change, chartData, onPress }) => {
     const [currentData, setCurrentData] = React.useState(chartData);
 
     React.useEffect(() => {
         const interval = setInterval(() => {
-            // Simulate real-time data updates
             const newData = [...currentData];
             newData.shift();
             newData.push(Math.random() * 100);
@@ -56,21 +45,20 @@ const MarketItem = ({ icon, name, symbol, price, change, chartData, onPress }) =
 
     return (
         <TouchableOpacity style={styles.marketItem} onPress={onPress}>
-
             <View style={styles.marketItemLeft}>
-                <Image source={{ uri: `https://cryptologos.cc/logos/${name.toLowerCase()}-${symbol.toLowerCase()}-logo.png` }} style={styles.marketIcon} />
-
+                <Image source={{ uri: `https://cryptologos.cc/logos/${name.toLowerCase().replace(/\s+/g, '-')}-${symbol.toLowerCase()}-logo.png` }} style={styles.marketIcon} />
                 <View>
                     <Text style={styles.marketName}>{name}</Text>
-                    <Text style={styles.marketSymbol}>{symbol}</Text>
+                    <Text style={styles.marketSymbol}>{price === 0 ? '0' : price.toFixed(5)} {symbol}</Text>
                 </View>
             </View>
             <View style={styles.marketItemRight}>
-
                 <View>
-                    <Text style={styles.marketPrice}>${price}</Text>
+                    <Text style={styles.cryptoPrice}>
+                        {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(balance)}
+                    </Text>
                     <Text style={[styles.marketChange, { color: change >= 0 ? '#4A8CFF' : '#F44336' }]}>
-                        {change >= 0 ? '↑' : '↓'}${Math.abs(change)}
+                        {change >= 0 ? '↑' : '↓'}{Math.abs(change).toFixed(2)}%
                     </Text>
                 </View>
             </View>
@@ -83,196 +71,230 @@ export default function DashboardScreen() {
     const [showBalance, setShowBalance] = React.useState(true);
     const [shakeCount, setShakeCount] = useState(0);
     const [lastShakeTime, setLastShakeTime] = useState(0);
+    const { user } = useAuth();
+    const user_id = (user.id)
+    const [refreshing, setRefreshing] = useState(false);
+
+    const [balances, setBalances] = useState([
+        { symbol: 'BTC', balance: user && user.btc_balance, full_name: 'Bitcoin' },
+        { symbol: 'USDT', balance: user && user.usdt_balance, full_name: 'Tether' },
+        { symbol: 'ADA', balance: user && user.ada_balance, full_name: 'Cardano' },
+        { symbol: 'BNB', balance: user && user.bnb_balance, full_name: 'Binance Coin' },
+        { symbol: 'DOGE', balance: user && user.doge_balance, full_name: 'Dogecoin' },
+        { symbol: 'ETH', balance: user && user.eth_balance, full_name: 'Ethereum' },
+        { symbol: 'MATIC', balance: user && user.matic_balance, full_name: 'Polygon' },
+        { symbol: 'SOL', balance: user && user.sol_balance, full_name: 'Solana' },
+        { symbol: 'USDC', balance: user && user.usdc_balance, full_name: 'USD Coin' },
+        { symbol: 'XRP', balance: user && user.xrp_balance, full_name: 'Ripple' },
+    ]);
+
+    const fetchCryptoPrices = async () => {
+        try {
+            const response = await axios.get('https://api.coincap.io/v2/assets');
+            const assets = response.data.data;
+
+            const updatedBalances = balances.map((crypto) => {
+                const asset = assets.find((asset) => asset.symbol === crypto.symbol);
+                return {
+                    ...crypto,
+                    balance: user[`${crypto.symbol.toLowerCase()}_balance`], // Update balance from user object
+                    priceUsd: asset ? parseFloat(asset.priceUsd) : 0,
+                    changePercent24Hr: asset ? parseFloat(asset.changePercent24Hr) : 0,
+                    rank: asset ? asset.rank : 0,
+                    maxsupply: asset ? asset.maxSupply : 0,
+                    marketcap: asset ? asset.marketCapUsd : 0,
+                    id: asset ? asset.id : 0,
+                    supply: asset ? asset.supply : 0,
+                    maxSupply: asset ? asset.maxSupply : 0,
+                };
+            });
+
+            setBalances(updatedBalances);
+        } catch (error) {
+            console.error('Error fetching crypto prices:', error.message);
+        }
+    };
+
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        fetchCryptoPrices().then(() => setRefreshing(false));
+    }, []);
+
+    useEffect(() => {
+        fetchCryptoPrices();
+        const intervalId = setInterval(fetchCryptoPrices, 5000);
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    const totalBalance = balances.reduce((sum, crypto) => {
+        const balance = parseFloat(crypto.balance) || 0;
+        return sum + balance;
+    }, 0);
 
     const toggleBalanceVisibility = () => {
         setShowBalance(!showBalance);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
     };
+
     const handlePortfolioPress = (item) => {
         navigation.navigate('CoinDetailScreen', { item });
     };
 
-    const handleNotificationPress = (item) => {
+    const handleNotificationPress = () => {
         navigation.navigate('Notification');
     };
+
     const handleButtonPress = (action) => {
         console.log(`${action} button pressed`);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         navigation.navigate(action);
-
     };
 
     useEffect(() => {
         const subscription = Accelerometer.addListener((accelerometerData) => {
             const { x, y, z } = accelerometerData;
-
-            // Calculate shake magnitude
             const magnitude = Math.sqrt(x * x + y * y + z * z);
-            const shakeThreshold = 2; // Adjust this value if necessary
+            const shakeThreshold = 2;
             const currentTime = Date.now();
 
-            // Detect shake and check the time difference for double shake
             if (magnitude > shakeThreshold) {
-                if (currentTime - lastShakeTime < 1000) { // 1 second window for double shake
+                if (currentTime - lastShakeTime < 1000) {
                     setShakeCount(shakeCount + 1);
                 } else {
-                    setShakeCount(1); // reset count if shake is too far apart
+                    setShakeCount(1);
                 }
-
                 setLastShakeTime(currentTime);
             }
 
-            // If double shake is detected, toggle the balance visibility
             if (shakeCount >= 2) {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-
                 toggleBalanceVisibility();
-                setShakeCount(0); // Reset shake count after action
+                setShakeCount(0);
             }
         });
 
-        // Set update interval for accelerometer (100ms)
         Accelerometer.setUpdateInterval(100);
 
-        // Cleanup the subscription when the component unmounts
         return () => subscription.remove();
-    }, [shakeCount, lastShakeTime]); // Dependencies on shakeCount and lastShakeTime
+    }, [shakeCount, lastShakeTime]);
 
-
-
-    //   useEffect(() => {
-    //     const interval = setInterval(() => {
-    //       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    //     }, 2000);
-
-    //     return () => clearInterval(interval);
-    //   }, []);
+    const convertUSDToCrypto = (usdAmount, priceOfCrypto) => {
+        const cryptoAmount = usdAmount / priceOfCrypto;
+        return cryptoAmount;
+    };
 
     return (
-        <>
-    
-      <SafeAreaView style={styles.container}>
-                <ScrollView showsVerticalScrollIndicator={false}>
-                    <View style={styles.header}>
-                        <Image
-                            source={{ uri: 'https://i.pravatar.cc/150?img=14' }}
-                            style={styles.avatar}
-                        />
-                        <TouchableOpacity onPress={handleNotificationPress}>
-                            <Bell stroke="#fff" width={24} height={24} />
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.balance}>
-                        <Text style={styles.balanceLabel}>Portfolio Balance</Text>
-                        <TouchableOpacity onPress={toggleBalanceVisibility} style={styles.balanceRow}>
-                            {showBalance ? (
-                                <Text style={styles.balanceAmount}>$12,550.50</Text>
-                            ) : (
-                                <Text style={styles.balanceAmount}>•••••••</Text>
-                            )}
-                            <TouchableOpacity onPress={toggleBalanceVisibility}>
-                                {showBalance ? (
-                                    <Eye stroke="#fff" width={24} height={24} style={styles.eyeIcon} />
-                                ) : (
-                                    <EyeOff stroke="#fff" width={24} height={24} style={styles.eyeIcon} />
-                                )}
-                            </TouchableOpacity>
-                        </TouchableOpacity>
-                        <View style={styles.balanceChange}>
-                            <Text style={styles.balanceChangeText}>↑ 10.75%</Text>
-                        </View>
-                    </View>
-                    <View style={styles.buttonContainer}>
-                        <TouchableOpacity
-                            style={styles.button}
-                            onPress={() => handleButtonPress('Receive')}
-                        >
-                            <Text style={styles.buttonText}><ArrowDown color={'white'} /></Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.button}
-                            onPress={() => handleButtonPress('Send')}
-                        >
-                            <Text style={styles.buttonText}><ArrowUp color={'white'} /></Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.button}
-                            onPress={() => handleButtonPress('Swap')}
-                        >
-                            <Text style={styles.buttonText}><Repeat color={'white'} /></Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.portfolio}>
-                        <View style={styles.portfolioHeader}>
-                            <Text style={styles.portfolioTitle}>Pinned Portfolio</Text>
-                            <TouchableOpacity style={styles.filtertouchableContainer}>
-                                <Text style={styles.portfolioFilter}>
-                                    View All
-                                </Text>
-                                <ArrowRight width={15} />
-                            </TouchableOpacity>
-                        </View>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-
-                            {cryptoData.slice(0, 2).map((crypto) => (
-                                <CryptoCard
-                                    key={crypto.symbol}
-                                    symbol={crypto.symbol}
-                                    name={crypto.name}
-                                    price={crypto.price}
-                                    change={crypto.change}
-                                    color="#7B61FF"
-
-                                    onPress={() => handlePortfolioPress(crypto)}
-                                />
-                            ))}
-
-                        </ScrollView>
-                    </View>
-
-
-                    {/* <View style={styles.referral}>
-                    <View style={styles.referralContent}>
-                        <View>
-                            <Text style={styles.referralTitle}>Connect for Interlinking</Text>
-                            <Text style={styles.referralDescription}>
-                                Connect your external wallet for interlinking
-                            </Text>
-                        </View>
-
-                    </View>
-                    <TouchableOpacity style={styles.closeButton}>
-                        <X stroke="#fff" width={20} height={20} />
+        <SafeAreaView style={styles.container}>
+            <ScrollView 
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+            >
+                <View style={styles.header}>
+                    <Image
+                        source={{ uri: 'https://i.pravatar.cc/150?img=14' }}
+                        style={styles.avatar}
+                    />
+                    <TouchableOpacity onPress={handleNotificationPress}>
+                        <Bell stroke="#fff" width={24} height={24} />
                     </TouchableOpacity>
-                </View> */}
+                </View>
 
-                    <View style={styles.market}>
-                        <Text style={styles.marketTitle}>My Portfolio</Text>
-                        {cryptoData.map((crypto) => (
+                <View style={styles.balance}>
+                    <Text style={styles.balanceLabel}>Portfolio Balance</Text>
+                    <TouchableOpacity onPress={toggleBalanceVisibility} style={styles.balanceRow}>
+                        {showBalance ? (
+                            <Text style={styles.balanceAmount}>
+                                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(totalBalance)}
+                            </Text>
+                        ) : (
+                            <Text style={styles.balanceAmount}>•••••••</Text>
+                        )}
+                        <TouchableOpacity onPress={toggleBalanceVisibility}>
+                            {showBalance ? (
+                                <Eye stroke="#fff" width={24} height={24} style={styles.eyeIcon} />
+                            ) : (
+                                <EyeOff stroke="#fff" width={24} height={24} style={styles.eyeIcon} />
+                            )}
+                        </TouchableOpacity>
+                    </TouchableOpacity>
+                    <View style={styles.balanceChange}>
+                        <Text style={styles.balanceChangeText}>
+                            {balances[0].priceUsd ? ((convertUSDToCrypto(balances[0].balance, balances[0].priceUsd))  === 0 ? '0' : (convertUSDToCrypto(balances[0].balance, balances[0].priceUsd)).toFixed(5)) : 0}  
+                            {' '}{balances[0].symbol}
+                        </Text>
+                    </View>
+                </View>
 
-                            <MarketItem
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => handleButtonPress('Receive')}
+                    >
+                        <Text style={styles.buttonText}><ArrowDown color={'white'} /></Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => handleButtonPress('Send')}
+                    >
+                        <Text style={styles.buttonText}><ArrowUp color={'white'} /></Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => handleButtonPress('Swap')}
+                    >
+                        <Text style={styles.buttonText}><Repeat color={'white'} /></Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.portfolio}>
+                    <View style={styles.portfolioHeader}>
+                        <Text style={styles.portfolioTitle}>Pinned Portfolio</Text>
+                        <TouchableOpacity style={styles.filtertouchableContainer}>
+                            <Text style={styles.portfolioFilter}>
+                                View All
+                            </Text>
+                            <ArrowRight width={15} />
+                        </TouchableOpacity>
+                    </View>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        {balances && balances.slice(0, 2).map((crypto, index) => (
+                            <CryptoCard
                                 key={crypto.symbol}
                                 symbol={crypto.symbol}
-                                name={crypto.name}
-                                price={crypto.price}
-                                change={crypto.change}
-                                onPress={() => handlePortfolioPress(crypto)}
-                                chartData={[40, 45, 35, 50, 49, 60, 70, 91, 85, 87, 80, 75, 85]}
+                                name={crypto.full_name}
+                                price={crypto.priceUsd ? convertUSDToCrypto(crypto.balance, crypto.priceUsd) : 0}
+                                change={crypto.changePercent24Hr}
+                                color="#7B61FF"
+                                onPress={() => handlePortfolioPress({ ...crypto, index: index + 1 })}
                             />
                         ))}
+                    </ScrollView>
+                </View>
 
-                    </View>
-                </ScrollView>
-            </SafeAreaView>
-        </>
+                <View style={styles.market}>
+                    <Text style={styles.marketTitle}>My Portfolio</Text>
+                    {balances && balances.map((crypto, index) => (
+                        <MarketItem
+                            key={crypto.symbol}
+                            symbol={crypto.symbol}
+                            name={crypto.full_name}
+                            price={crypto.priceUsd ? convertUSDToCrypto(crypto.balance, crypto.priceUsd) : 0}
+                            balance={crypto.priceUsd ? (crypto.balance) : 0}
+                            change={crypto.changePercent24Hr}
+                            onPress={() => handlePortfolioPress({ ...crypto, index: index + 1 })}
+                            chartData={[40, 45, 35, 50, 49, 60, 70, 91, 85, 87, 80, 75, 85]}
+                        />
+                    ))}
+                </View>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
-
-
 
 const styles = StyleSheet.create({
     container: {

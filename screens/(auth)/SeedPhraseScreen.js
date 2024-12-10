@@ -37,7 +37,7 @@ export default function SeedPhraseScreen({ navigation }) {
 
                 <TouchableOpacity
                     style={styles.button}
-                    onPress={() => navigation.navigate('RemindLater')}
+                    onPress={() => navigation.navigate('SeedPhraseReveal')}
                 >
                     <Text style={styles.buttonText}>I Got It</Text>
                 </TouchableOpacity>

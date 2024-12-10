@@ -7,12 +7,21 @@ import { useAuth } from '../../context/AuthContext';
 export default function SecureWalletScreen({ navigation }) {
     const { login } = useAuth();
     const SkipSignup = async () => {
-        const user_id = await AsyncStorage.getItem('temp_user');
-
-
-        const token = 'randomshit'; // Replace with a token from your backend
-        login({ user_id, token });
-    }
+        try {
+            const user = JSON.parse(await AsyncStorage.getItem('temp_user'));
+            const user_id = await AsyncStorage.getItem('temp_user_id');
+            
+            // Check if user exists and user_id is valid before calling login
+            if (user && user_id) {
+                login({ user, user_id });
+            } else {
+                console.error('User data or user ID is missing');
+            }
+        } catch (error) {
+            console.error('Error retrieving user data:', error);
+        }
+    };
+    
 
 
 

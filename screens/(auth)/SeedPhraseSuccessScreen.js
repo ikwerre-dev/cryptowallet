@@ -3,16 +3,28 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SeedPhraseSuccessScreen({ navigation }) {
     const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-
-    const handleLogin = () => {
-        const token = 'example-token'; // Replace with a token from your backend
-        login({ email, token });
+    const SkipSignup = async () => {
+        try {
+            const user = JSON.parse(await AsyncStorage.getItem('temp_user'));
+            const user_id = await AsyncStorage.getItem('temp_user_id');
+            
+            // Check if user exists and user_id is valid before calling login
+            if (user && user_id) {
+                login({ user, user_id });
+            } else {
+                console.error('User data or user ID is missing');
+            }
+        } catch (error) {
+            console.error('Error retrieving user data:', error);
+        }
     };
+    
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
@@ -51,7 +63,7 @@ export default function SeedPhraseSuccessScreen({ navigation }) {
 
                 <TouchableOpacity
                     style={styles.button}
-                    onPress={handleLogin}
+                    onPress={SkipSignup}
                 >
                     <Text style={styles.buttonText}>Continue</Text>
                 </TouchableOpacity>

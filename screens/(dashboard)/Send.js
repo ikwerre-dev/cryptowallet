@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,10 @@ import { Easing } from 'react-native-reanimated';
 import * as Notifications from 'expo-notifications';
 import { Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { SafeAreaView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+import { Image } from 'react-native';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -32,11 +36,13 @@ export default function SendScreen({ navigation }) {
   const [step, setStep] = useState(1);
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
+  const [gasfee, setGasfee] = useState(0);
   const [selectedToken, setSelectedToken] = useState(null);
   const [showScanner, setShowScanner] = useState(false);
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [contacts, setcontacts] = useState([]);
 
   const cameraRef = useRef(null);
 
@@ -48,23 +54,111 @@ export default function SendScreen({ navigation }) {
     { symbol: "XRP", name: "Ripple", price: 0.98, balance: 3.00912, value: "$30", icon: "⚪" },
   ];
 
-  const contacts = [
-    { id: 1, name: "Bessie Cooper", address: "0xdhfhdf...kjseu" },
-    { id: 2, name: "Jerome Bell", address: "0xdhfhdf...kjseu" },
-    { id: 3, name: "Marvin McKinney", address: "0xdhfhdf...kjseu" },
-    { id: 4, name: "Kathryn Murphy", address: "0xdhfhdf...kjseu" },
-    { id: 5, name: "Ralph Edwards", address: "0xdhfhdf...kjseu" },
-  ];
+  const { user } = useAuth();
+
+  const uid = user.uid;
+
+
+  const [prices, setPrices] = useState({});
+
+  const [balances, setBalances] = useState([
+    { symbol: 'BTC', balance: user && user.btc_balance, full_name: 'Bitcoin' },
+    { symbol: 'USDT', balance: user && user.usdt_balance, full_name: 'Tether' },
+    { symbol: 'ADA', balance: user && user.ada_balance, full_name: 'Cardano' },
+    { symbol: 'BNB', balance: user && user.bnb_balance, full_name: 'Binance Coin' },
+    { symbol: 'DOGE', balance: user && user.doge_balance, full_name: 'Dogecoin' },
+    { symbol: 'ETH', balance: user && user.eth_balance, full_name: 'Ethereum' },
+    { symbol: 'MATIC', balance: user && user.matic_balance, full_name: 'Polygon' },
+    { symbol: 'SOL', balance: user && user.sol_balance, full_name: 'Solana' },
+    { symbol: 'USDC', balance: user && user.usdc_balance, full_name: 'USD Coin' },
+    { symbol: 'XRP', balance: user && user.xrp_balance, full_name: 'Ripple' },
+  ]);
+
+  const fetchCryptoPrices = async () => {
+    try {
+      const response = await axios.get('https://api.coincap.io/v2/assets');
+      const assets = response.data.data;
+
+      const updatedBalances = balances.map((crypto) => {
+        const asset = assets.find((asset) => asset.symbol === crypto.symbol);
+        return {
+          ...crypto,
+          priceUsd: asset ? parseFloat(asset.priceUsd) : 0, // Add price if available
+          changePercent24Hr: asset ? parseFloat(asset.changePercent24Hr) : 0, // Add change percentage if available
+          rank: asset ? asset.rank : 0, // Add price if available
+          maxsupply: asset ? asset.maxSupply : 0, // Add price if available
+          marketcap: asset ? asset.marketCapUsd : 0, // Add price if available
+          id: asset ? asset.id : 0, // Add price if available
+          supply: asset ? asset.supply : 0, // Add price if available
+          maxSupply: asset ? asset.maxSupply : 0, // Add price if available
+
+        };
+      });
+
+      setBalances(updatedBalances);
+      // console.log(assets)
+    } catch (error) {
+      console.error('Error fetching crypto prices:', error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchCryptoPrices(); // Initial fetch
+    const intervalId = setInterval(fetchCryptoPrices, 5000); // Fetch every 5 seconds
+
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+  }, []);
+
+
+  useEffect(() => {
+    const generateCacheString = () => {
+      // Generates a unique 16-character string (can include letters and digits)
+      return Math.random().toString(36).substring(2, 18);
+    };
+
+    const loadUserData = async () => {
+      const storedUser = await AsyncStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const cacheString = generateCacheString();
+          const response = await axios.post(`http://192.168.1.115/cryptowallet_api/getAllTransfers?cache=${cacheString}`, storedUser);
+          if (response.data.code === 200) {
+
+            setcontacts(response.data.data);
+            // console.log(`user refreshed - ${cacheString}`);
+          } else {
+            alert(response.data.message);
+          }
+        } catch (error) {
+          console.error(error.response ? error.response.data : error.message);
+        }
+      }
+
+      setLoading(false);
+    };
+
+    loadUserData();
+
+    // Set an interval to call loadUserData every 2 seconds
+    const intervalId = setInterval(loadUserData, 5000);
+
+    // Cleanup the interval when the component unmounts or re-renders
+    return () => clearInterval(intervalId);
+  }, []);
+
 
   const filteredContacts = contacts.filter(contact =>
-    contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contact.address.toLowerCase().includes(searchQuery.toLowerCase())
+    contact.cryptocurrency.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    contact.wallet_address.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredTokens = cryptoData.filter(token =>
-    token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  const filteredTokens = balances.filter(token =>
+    token.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+
+  // console.log(filteredTokens)
 
   const handleNumberPress = (num) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -73,15 +167,53 @@ export default function SendScreen({ navigation }) {
       const decimals = amount.split('.')[1];
       if (decimals && decimals.length >= 8) return;
     }
-    setAmount(prev => prev + num);
+    setAmount(prev => {
+      const newAmount = prev + num;
+      setGasfee((parseFloat(newAmount) * 0.005).toFixed(3));
+      return newAmount;
+    });
   };
-
+  
   const handleDeletePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setAmount(prev => prev.slice(0, -1));
+    setAmount(prev => {
+      const newAmount = prev.slice(0, -1) || "0";
+      setGasfee((parseFloat(newAmount) * 0.005).toFixed(3));
+      return newAmount;
+    });
   };
+  
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    const generateCacheString = () => {
+      // Generates a unique 16-character string (can include letters and digits)
+      return Math.random().toString(36).substring(2, 18);
+  };
+  
+    const payload = {
+      user_id: user.id,
+      amount: amount,
+      wallet_address: recipient,
+      cryptocurrency: selectedToken.symbol,
+      gas_fee: gasfee
+    };
+
+    console.log(payload)
+    if (payload) {
+      try {
+        const cacheString = generateCacheString();
+        const response = await axios.post(`http://192.168.1.115/cryptowallet_api/transfer?cache=${cacheString}`, payload);
+        if (response.data.code === 200) {
+
+          console.log(response.data);
+          // console.log(`user refreshed - ${cacheString}`);
+        } else {
+          alert(response.data.message);
+        }
+      } catch (error) {
+        console.error(error.response ? error.response.data : error.message);
+      }
+    }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     Notifications.scheduleNotificationAsync({
       content: {
@@ -91,12 +223,12 @@ export default function SendScreen({ navigation }) {
       trigger: null,
     });
 
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      // navigation.goBack();
-      navigation.navigate('Dashboard');
-    }, 2000);
+    // setShowSuccess(true);
+    // setTimeout(() => {
+    //   setShowSuccess(false);
+    //   // navigation.goBack();
+    //   navigation.navigate('Dashboard');
+    // }, 2000);
   };
 
   const handleBarCodeScanned = ({ data }) => {
@@ -117,15 +249,9 @@ export default function SendScreen({ navigation }) {
           value={recipient}
           onChangeText={setRecipient}
         />
-        <TouchableOpacity onPress={() => setShowScanner(true)} style={styles.scanButton}>
-          <Ionicons name="scan" size={24} color="#7B61FF" />
-        </TouchableOpacity>
+
       </View>
 
-      <TouchableOpacity style={styles.addButton}>
-        <Ionicons name="add" size={20} color="#7B61FF" />
-        <Text style={styles.addButtonText}>Add this to your address book</Text>
-      </TouchableOpacity>
 
       <Text style={[styles.label, { marginTop: 24 }]}>Recent Transfers</Text>
       <View style={styles.searchContainer}>
@@ -145,16 +271,18 @@ export default function SendScreen({ navigation }) {
             key={contact.id}
             style={styles.contactItem}
             onPress={() => {
-              setRecipient(contact.address);
+              setRecipient(contact.wallet_address);
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             }}
           >
             <View style={styles.contactAvatar}>
-              <Text style={styles.avatarText}>{contact.name[0]}</Text>
+              <Text style={styles.avatarText}>{contact.cryptocurrency[0]}</Text>
             </View>
             <View style={styles.contactInfo}>
-              <Text style={styles.contactName}>{contact.name}</Text>
-              <Text style={styles.contactAddress}>{contact.address}</Text>
+              <Text style={styles.contactName}>{contact.cryptocurrency.toUpperCase()}</Text>
+              <Text style={styles.contactAddress}>
+                {`${contact.wallet_address.slice(0, 8)}****${contact.wallet_address.slice(-8)}`}
+              </Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -166,6 +294,7 @@ export default function SendScreen({ navigation }) {
         onPress={() => {
           setStep(2);
           setShowTokenModal(true);
+          setSearchQuery('')
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }}
       >
@@ -180,23 +309,35 @@ export default function SendScreen({ navigation }) {
       <View style={styles.amountContainer}>
         <Text style={styles.amount}>{amount || '0'}</Text>
         <TouchableOpacity style={styles.maxButton}>
-          <Text style={styles.maxButtonText}>Max</Text>
+          <Text style={styles.maxButtonText}>Gas Fee: ${gasfee}</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.balanceContainer}>
+      <TouchableOpacity style={styles.balanceContainer} onPress={() => {
+        setShowTokenModal(true);
+        setSearchQuery('')
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }}>
         <View style={styles.tokenInfo}>
           <Text style={styles.tokenIcon}>{selectedToken?.icon}</Text>
+          <Image
+            source={{ uri: `https://cryptologos.cc/logos/${selectedToken?.full_name.toLowerCase().replace(/\s+/g, '-')}-${selectedToken?.symbol.toLowerCase()}-logo.png` }}
+            style={styles.cryptoIcon}
+          />
           <View>
             <Text style={styles.tokenSymbol}>{selectedToken?.symbol}</Text>
-            <Text style={styles.tokenName}>{selectedToken?.name}</Text>
+            <Text style={styles.tokenName}>{selectedToken?.full_name}</Text>
           </View>
         </View>
         <View>
-          <Text style={styles.tokenBalance}>{selectedToken?.balance}</Text>
-          <Text style={styles.tokenValue}>{selectedToken?.value}</Text>
+          <Text style={styles.tokenBalance}>${selectedToken?.balance}</Text>
+          <Text style={styles.tokenValue}>
+            {selectedToken && selectedToken.balance / selectedToken.priceUsd !== 0
+              ? (selectedToken.balance / selectedToken.priceUsd).toFixed(5)
+              : "0"}
+          </Text>
         </View>
-      </View>
+      </TouchableOpacity>
 
       <View style={styles.keypad}>
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0].map((num) => (
@@ -277,7 +418,7 @@ export default function SendScreen({ navigation }) {
                   </View>
 
                   <TextInput
-                    style={styles.searchInput}
+                    style={[styles.searchInput, { backgroundColor: '#121212' }]}
                     placeholder="Search token"
                     placeholderTextColor="#666"
                     value={searchQuery}
@@ -296,15 +437,19 @@ export default function SendScreen({ navigation }) {
                         }}
                       >
                         <View style={styles.tokenInfo}>
-                          <Text style={styles.tokenIcon}>{token.icon}</Text>
+                          <Image
+                            source={{ uri: `https://cryptologos.cc/logos/${token?.full_name.toLowerCase().replace(/\s+/g, '-')}-${token?.symbol.toLowerCase()}-logo.png` }}
+                            style={styles.cryptoIcon}
+                          />
                           <View>
+
                             <Text style={styles.tokenSymbol}>{token.symbol}</Text>
-                            <Text style={styles.tokenName}>{token.name}</Text>
+                            <Text style={styles.tokenName}>{token.full_name}</Text>
                           </View>
                         </View>
                         <View>
-                          <Text style={styles.tokenBalance}>{token.balance}</Text>
-                          <Text style={styles.tokenValue}>{token.value}</Text>
+                          <Text style={styles.tokenBalance}>${token.balance}</Text>
+                          <Text style={styles.tokenValue}>{(token.priceUsd ? (token.balance / token.priceUsd) : 0) != 0 ? (token.priceUsd ? (token.balance / token.priceUsd) : 0).toFixed(5) : 0}</Text>
                         </View>
                       </TouchableOpacity>
                     ))}
@@ -363,6 +508,11 @@ const styles = StyleSheet.create({
     // paddingTop: 10,
 
   },
+  cryptoIcon: {
+    width: 25,
+    height: 25,
+    marginRight: 8,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -419,10 +569,12 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   searchInput: {
-    flex: 1,
+    // flex: 1,
     color: '#fff',
     marginLeft: 8,
     fontSize: 16,
+    paddingVertical: 15,
+    paddingHorizontal: 10
   },
   contactList: {
     flex: 1,

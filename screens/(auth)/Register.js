@@ -17,8 +17,8 @@ export default function CreatePasswordScreen({ navigation }) {
     const [faceIdEnabled, setFaceIdEnabled] = useState(false);
     const [understood, setUnderstood] = useState(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
-    const [loginEmail, setLoginEmail] = useState('');
-    const [loginPassword, setLoginPassword] = useState('');
+    const [loginEmail, setLoginEmail] = useState('testuser@gmail.com');
+    const [loginPassword, setLoginPassword] = useState('111111');
     const { login } = useAuth();
 
     const [emailError, setEmailError] = useState('');
@@ -34,7 +34,7 @@ export default function CreatePasswordScreen({ navigation }) {
         }
     };
 
-
+    
 
     const createaccount = async () => {
         const payload = {
@@ -43,20 +43,22 @@ export default function CreatePasswordScreen({ navigation }) {
             confirm_password: confirmPassword,
             account_pin: pin,
         };
-
+    
         try {
-            const response = await axios.post('http://172.20.10.2/cryptowallet_api/register', payload);
+            const response = await axios.post('http://192.168.1.115/cryptowallet_api/register', payload);
             console.log(response.data);
             if (response.data.code == 201) {
-                AsyncStorage.setItem('temp_user', response.data.user_id)
-                navigation.navigate('SecureWallet')
+                await AsyncStorage.setItem('temp_user', JSON.stringify(response.data.user));
+                await AsyncStorage.setItem('temp_user_id', response.data.user_id);
+                navigation.navigate('SecureWallet');
             } else {
-                alert(response.data.message)
+                alert(response.data.message);
             }
         } catch (error) {
             console.error(error.response ? error.response.data : error.message);
         }
     };
+    
     const validatePassword = (password) => {
         if (password.length < 8) {
             setPasswordError('Password must be at least 8 characters long');
@@ -100,9 +102,32 @@ export default function CreatePasswordScreen({ navigation }) {
         }
     };
 
-    const handleLogin = () => {
-        const token = 'example-token'; // Replace with a token from your backend
-        login({ loginEmail, token });
+    const handleLogin = async () => {
+        const payload = {
+            email: loginEmail,
+            password: loginPassword,
+
+        };
+
+        try {
+            const response = await axios.post('http://192.168.1.115/cryptowallet_api/login', payload);
+             if (response.data.code == 200) {
+                const token = 'example-token';
+                // console.log(response.data)
+                var user = response.data.user
+                var user_id = response.data.user_id
+                login({ user_id, user });
+                // console.debug(user)
+
+
+
+            } else {
+                alert(response.data.message)
+            }
+        } catch (error) {
+            console.error(error.response ? error.response.data : error.message);
+        }
+
     };
 
     const renderLoginModal = () => (

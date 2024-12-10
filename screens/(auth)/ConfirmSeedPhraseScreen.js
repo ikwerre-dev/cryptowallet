@@ -152,6 +152,8 @@ const styles = StyleSheet.create({
     selectedWord: {
         color: '#4CAF50',
         fontWeight: '600',
+        paddingVertical:10
+
     },
     wordGrid: {
         flexDirection: 'row',
@@ -166,6 +168,8 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
+        paddingVertical:10
+
     },
     wordButtonSelected: {
         backgroundColor: '#E0E0E0',
