@@ -1,80 +1,217 @@
-import { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+} from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import Snackbar from "./Snackbar"; // Import the Snackbar component
+import { View } from "react-native";
+import * as Network from "expo-network";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [biometricEmail, setBiometricEmail] = useState(null);
+  const [user, setUser] = useState(null);
+  const [transactions, setTransactions] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [balances, setBalance] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [networkStatus, setnetworkStatus] = useState(true);
+  const [biometricEmail, setBiometricEmail] = useState(null);
 
-    // Function to generate a unique cache string
-    const generateCacheString = () => {
-        return Math.random().toString(36).substring(2, 18);
-    };
+  const generateCacheString = () => {
+    return Math.random().toString(36).substring(2, 18);
+  };
 
-    // Load user data from AsyncStorage and update the user state
-    const loadUserData = useCallback(async () => {
-        const storedUser = await AsyncStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
+  const loadUserData = useCallback(async () => {
+    try {
+      const storedUser = await AsyncStorage.getItem("user");
+      const storedUserDetails = await AsyncStorage.getItem("userDetails");
 
-            try {
-                const cacheString = generateCacheString();
-                const response = await axios.post(`http://192.168.1.115/cryptowallet_api/getUserDetails?cache=${cacheString}`, JSON.parse(storedUser));
-                if (response.data.code === 200) {
-                    setUser(response.data.data); // Update user state
-                } else {
-                    alert(response.data.message);
-                    logout(); // Call logout if the response is not successful
-                }
-            } catch (error) {
-                console.error(error.response ? error.response.data : error.message);
-            }
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+
+        if (storedUserDetails) {
+          const userDetails = JSON.parse(storedUserDetails);
+          setUser(userDetails.data);
+          setBalance(userDetails.user);
         }
 
-        setLoading(false);
-    }, []);
+        const cacheString = generateCacheString();
+        const response = await axios.post(
+          `http://192.168.1.115/cryptowallet_api/getUserDetails?cache=${cacheString}`,
+          JSON.parse(storedUser),
+        );
 
-    // Start fetching the user data periodically
-    useEffect(() => {
-        loadUserData(); // Load user data initially
+        if (response.data.code === 200) {
+          setUser(response.data.data);
+          setBalance(response.data.user);
+          await AsyncStorage.setItem(
+            "userDetails",
+            JSON.stringify(response.data),
+          );
+        } else {
+          alert(response.data.message);
+          logout();
+        }
+      }
+      setnetworkStatus(true);
+    } catch (error) {
+      setnetworkStatus(false);
+      // console.warn(error.response ? error.response.data : error.message);
+      const storedUserDetails = await AsyncStorage.getItem("userDetails");
+      if (storedUserDetails) {
+        // console.log('API unreachable. Fetching from cache.');
+        const userDetails = JSON.parse(storedUserDetails);
+        setUser(userDetails.data);
+        setBalance(userDetails.user);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-        // Polling the data every 2 seconds
-        const intervalId = setInterval(() => {
-            loadUserData();
-        }, 2000);
+  const loadUserTransactions = useCallback(async () => {
+    try {
+      const storedUser = await AsyncStorage.getItem("user");
+      const storedUserDetails =
+        await AsyncStorage.getItem("getAllTransactions");
 
-        // Cleanup the interval when the component unmounts
-        return () => clearInterval(intervalId);
-    }, [loadUserData]);
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
 
-    // Login function to set user and store in AsyncStorage
-    const login = useCallback(async (userData) => {
-        setUser(userData);
-        await AsyncStorage.setItem('user', JSON.stringify(userData));
-    }, []);
+        if (storedUserDetails) {
+          const userDetails = JSON.parse(storedUserDetails);
+          setTransactions(userDetails.data);
+        }
 
-    // Logout function to clear user data and AsyncStorage
-    const logout = useCallback(async () => {
-        setUser(null);
-        await AsyncStorage.removeItem('user');
-    }, []);
+        const cacheString = generateCacheString();
+        const response = await axios.post(
+          `http://192.168.1.115/cryptowallet_api/getAllTransactions?cache=${cacheString}`,
+          JSON.parse(storedUser),
+        );
 
-    // Save biometric email to AsyncStorage
-    const saveBiometricEmail = useCallback(async (email) => {
-        setBiometricEmail(email);
-        await AsyncStorage.setItem('biometric_email', email);
-    }, []);
+        if (response.data.code === 200) {
+          setTransactions(response.data.data);
+          await AsyncStorage.setItem(
+            "getAllTransactions",
+            JSON.stringify(response.data),
+          );
+        } else {
+          console.warn(response.data.message);
+        }
+      }
+      setnetworkStatus(true);
+    } catch (error) {
+      setnetworkStatus(false);
+      // console.warn(error.response ? error.response.data : error.message);
+      const storedUserDetails =
+        await AsyncStorage.getItem("getAllTransactions");
+      if (storedUserDetails) {
+        // console.log('API unreachable. Fetching from cache.');
+        const userDetails = JSON.parse(storedUserDetails);
+        setTransactions(userDetails.data);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    return (
-        <AuthContext.Provider value={{ user, login, logout, loading, biometricEmail, saveBiometricEmail }}>
-            {children}
-        </AuthContext.Provider>
-    );
+  useEffect(() => {
+    loadUserTransactions();
+    const intervalId = setInterval(() => {
+      loadUserTransactions();
+    }, 5000);
+    return () => clearInterval(intervalId);
+  }, [loadUserTransactions]);
+
+  // Function to check the internet connectivity status
+  const checkNetworkStatus = async () => {
+    const networkState = await Network.getNetworkStateAsync();
+    if (networkStatus) {
+      setnetworkStatus(
+        networkState.isConnected && networkState.isInternetReachable,
+      );
+    }
+  };
+
+  // Listen for changes in the network status
+  useEffect(() => {
+    // Check the initial status
+    checkNetworkStatus();
+
+    // Set up a polling mechanism to periodically check the network status
+    const intervalId = setInterval(() => {
+      checkNetworkStatus();
+    }, 2000); // Check every 5 seconds
+
+    // Clean up the interval when the component unmounts
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const fetchUserId = useCallback(async () => {
+    const storedUser = await AsyncStorage.getItem("user");
+    setUserId(storedUser && JSON.parse(storedUser).user_id);
+  }, []);
+
+  useEffect(() => {
+    fetchUserId();
+  }, [fetchUserId]);
+
+  useEffect(() => {
+    loadUserData();
+    const intervalId = setInterval(() => {
+      loadUserData();
+    }, 2000);
+    return () => clearInterval(intervalId);
+  }, [loadUserData]);
+
+  const login = useCallback(async (userData) => {
+    setUser(userData);
+    await AsyncStorage.setItem("user", JSON.stringify(userData));
+  }, []);
+
+  const logout = useCallback(async () => {
+    await AsyncStorage.removeItem("user");
+    await AsyncStorage.removeItem("userDetails");
+    await setUser(null);
+    await setBalance(null);
+  }, []);
+
+  const saveBiometricEmail = useCallback(async (email) => {
+    setBiometricEmail(email);
+    await AsyncStorage.setItem("biometric_email", email);
+  }, []);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        userId,
+        transactions,
+        balances,
+        networkStatus,
+        logout,
+        loading,
+        biometricEmail,
+        saveBiometricEmail,
+      }}
+    >
+      <View style={{ flex: 1 }}>
+        {children}
+        <Snackbar
+          message="Network error, Please check your internet."
+          visible={!networkStatus}
+        />
+      </View>
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
-    return useContext(AuthContext);
+  return useContext(AuthContext);
 };

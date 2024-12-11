@@ -8,70 +8,45 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuth } from '../../context/AuthContext';
 
 const TransactionsScreen = () => {
   const [activeTab, setActiveTab] = useState('History');
   
-  const transactions = [
-    {
-      id: '1',
-      type: 'Bitcoin Purchase',
-      amount: '$32,450.10',
-      cryptoAmount: '0.89 BTC',
-      timestamp: '9:01am',
-      percentageChange: '+4.5%',
-      icon: 'bitcoin',
-      status: 'completed',
-    },
-    {
-      id: '2',
-      type: 'Ethereum Transfer',
-      amount: '$2,800.00',
-      cryptoAmount: '1.2 ETH',
-      timestamp: '5:01am 2024-01-12',
-      percentageChange: '-1.5%',
-      icon: 'ethereum',
-      status: 'completed',
-    },
-    {
-      id: '3',
-      type: 'USDT Received',
-      amount: '$1,000.00',
-      cryptoAmount: '1000 USDT',
-      timestamp: '7:02pm 2024-01-13',
-      percentageChange: '0%',
-      icon: 'currency-usd',
-      status: 'completed',
-    },
-  ];
+  
+  const { user, userId,transactions } = useAuth();
+  
+  console.log(transactions)
 
   const renderTransaction = (transaction) => (
-    <View key={transaction.id} style={styles.transactionItem}>
+    <View key={`${transaction.id}-${transaction.source}`} style={styles.transactionItem}>
       <View style={styles.transactionLeft}>
         <View style={styles.iconContainer}>
           <MaterialCommunityIcons 
-            name={transaction.icon} 
+            name={transaction.source === 'transfer' ? 'bank-transfer' : 
+                  transaction.source === 'swap' ? 'swap-horizontal' : 
+                  transaction.source === 'p2p' ? 'account-multiple' : 
+                  'cash'} 
             size={24} 
             color="#FFF" 
           />
         </View>
         <View style={styles.transactionInfo}>
-          <Text style={styles.transactionType}>{transaction.type}</Text>
-          <Text style={styles.timestamp}>{transaction.timestamp}</Text>
+          <Text style={styles.transactionType}>
+            {transaction.source.charAt(0).toUpperCase() + transaction.source.slice(1)}
+          </Text>
+          <Text style={styles.timestamp}>
+            {new Date(transaction.created_at).toLocaleString()}
+          </Text>
         </View>
       </View>
       <View style={styles.transactionRight}>
-        <Text style={styles.amount}>{transaction.amount}</Text>
-        <Text style={styles.cryptoAmount}>{transaction.cryptoAmount}</Text>
-        <Text style={[
-          styles.percentageChange,
-          { color: transaction.percentageChange.includes('+') ? '#4CAF50' : '#FF5252' }
-        ]}>
-          {transaction.percentageChange}
-        </Text>
+        <Text style={styles.amount}>${parseFloat(transaction.amount).toFixed(2)}</Text>
       </View>
     </View>
   );
+
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -79,7 +54,7 @@ const TransactionsScreen = () => {
 
 
       <ScrollView style={styles.transactionList}>
-        {transactions.map(renderTransaction)}
+        {transactions.length > 0 && transactions.map(renderTransaction)}
       </ScrollView>
     </SafeAreaView>
   );

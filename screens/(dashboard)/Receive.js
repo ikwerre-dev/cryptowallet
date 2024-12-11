@@ -1,16 +1,28 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Image, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import QRCode from 'react-native-qrcode-svg';
-import * as Clipboard from 'expo-clipboard';
-import { useNavigation } from '@react-navigation/native';
-import * as Sharing from 'expo-sharing';
-import * as Haptics from 'expo-haptics';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  Image,
+  ScrollView,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import QRCode from "react-native-qrcode-svg";
+import * as Clipboard from "expo-clipboard";
+import { useNavigation } from "@react-navigation/native";
+import * as Sharing from "expo-sharing";
+import * as Haptics from "expo-haptics";
+import { useAuth } from "../../context/AuthContext";
 
 export default function ReceiveScreen() {
   const [selectedToken, setSelectedToken] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const { user, balances } = useAuth();
+
   const [walletAddresses] = useState({
     BTC: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
     ETH: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
@@ -28,14 +40,17 @@ export default function ReceiveScreen() {
     { symbol: "USDT", name: "Tether", price: 0.98, change: 0.15 },
   ];
 
-  const filteredCryptoData = cryptoData.filter(crypto =>
-    crypto.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    crypto.symbol.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCryptoData =
+    balances &&
+    balances.filter(
+      (crypto) =>
+        crypto.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        crypto.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
 
   const copyToClipboard = async () => {
-    if (selectedToken && walletAddresses[selectedToken.symbol]) {
-      await Clipboard.setStringAsync(walletAddresses[selectedToken.symbol]);
+    if (selectedToken) {
+      await Clipboard.setStringAsync(selectedToken.wallet_address);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setShowCopiedPopup(true);
       setTimeout(() => setShowCopiedPopup(false), 2000);
@@ -64,7 +79,7 @@ export default function ReceiveScreen() {
         >
           {selectedToken ? (
             <Text style={styles.selectedTokenText}>
-              {selectedToken.symbol} - {selectedToken.name}
+              {selectedToken.symbol} - {selectedToken.full_name}
             </Text>
           ) : (
             <Text style={styles.placeholderText}>Select Token</Text>
@@ -74,9 +89,13 @@ export default function ReceiveScreen() {
 
         {/* Info Message */}
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle-outline" size={24} color="#7B61FF" />
+          <Ionicons
+            name="information-circle-outline"
+            size={24}
+            color="#7B61FF"
+          />
           <Text style={styles.infoText}>
-            Only send {selectedToken?.symbol || 'tokens'} to this address
+            Only send {selectedToken?.symbol || "tokens"} to this address
           </Text>
         </View>
 
@@ -84,7 +103,7 @@ export default function ReceiveScreen() {
         {selectedToken && (
           <View style={styles.qrContainer}>
             <QRCode
-              value={walletAddresses[selectedToken.symbol]}
+              value={selectedToken.wallet_address}
               size={200}
               color="white"
               backgroundColor="transparent"
@@ -94,10 +113,12 @@ export default function ReceiveScreen() {
 
         {/* Wallet Address */}
         {selectedToken && (
-          <TouchableOpacity style={styles.addressContainer} onPress={copyToClipboard}>
+          <TouchableOpacity
+            style={styles.addressContainer}
+            onPress={copyToClipboard}
+          >
             <Text style={styles.addressText}>
-              {walletAddresses[selectedToken.symbol].slice(0, 6)}...
-              {walletAddresses[selectedToken.symbol].slice(-6)}
+              {selectedToken.wallet_address}
             </Text>
             <Ionicons name="copy-outline" size={20} color="#7B61FF" />
           </TouchableOpacity>
@@ -108,8 +129,10 @@ export default function ReceiveScreen() {
           <TouchableOpacity
             style={styles.shareButton}
             onPress={() => {
-              if (selectedToken && walletAddresses[selectedToken.symbol]) {
-                Sharing.shareAsync(`Send me ${selectedToken.symbol} to my wallet: ${walletAddresses[selectedToken.symbol]}`);
+              if (selectedToken && selectedToken.wallet_address) {
+                Sharing.shareAsync(
+                  `Send me ${selectedToken.symbol} to my wallet: ${selectedToken.wallet_address}`,
+                );
               }
             }}
           >
@@ -117,9 +140,9 @@ export default function ReceiveScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.confirmButton}
-            onPress={() => navigation.navigate('Dashboard')}
+            onPress={() => navigation.pop()}
           >
-            <Text style={styles.confirmButtonText}>Confirm</Text>
+            <Text style={styles.confirmButtonText}>Continue</Text>
           </TouchableOpacity>
         </View>
         {showCopiedPopup && (
@@ -131,11 +154,7 @@ export default function ReceiveScreen() {
       </View>
 
       {/* Token Selection Modal */}
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        transparent={true}
-      >
+      <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
@@ -164,15 +183,18 @@ export default function ReceiveScreen() {
                   }}
                 >
                   <View style={styles.tokenInfo}>
-                    <View style={[styles.tokenIcon, { backgroundColor: '#' + Math.floor(Math.random()*16777215).toString(16) }]}>
-                      <Text style={styles.tokenIconText}>{crypto.symbol[0]}</Text>
-                    </View>
+                    <Image
+                      source={{
+                        uri: `https://cryptologos.cc/logos/${crypto?.full_name.toLowerCase().replace(/\s+/g, "-")}-${crypto?.symbol.toLowerCase()}-logo.png`,
+                      }}
+                      style={styles.cryptoIcon}
+                    />
                     <View>
                       <Text style={styles.tokenSymbol}>{crypto.symbol}</Text>
-                      <Text style={styles.tokenName}>{crypto.name}</Text>
+                      <Text style={styles.tokenName}>{crypto.full_name}</Text>
                     </View>
                   </View>
-                  <Text style={styles.tokenPrice}>${crypto.price}</Text>
+                  <Text style={styles.tokenPrice}>${crypto.balance}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -186,80 +208,84 @@ export default function ReceiveScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
     paddingTop: 10,
-
+  },
+  cryptoIcon: {
+    width: 25,
+    height: 25,
+    marginRight: 8,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     paddingTop: 50,
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
   content: {
     flex: 1,
     padding: 16,
   },
   tokenSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#1a1a1a',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#1a1a1a",
     padding: 16,
     borderRadius: 8,
     marginBottom: 16,
   },
   selectedTokenText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
   },
   placeholderText: {
-    color: '#666',
+    color: "#666",
     fontSize: 16,
   },
   infoBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(230, 190, 255, 0.1)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(230, 190, 255, 0.1)",
     padding: 16,
     borderRadius: 8,
     marginBottom: 24,
   },
   infoText: {
-    color: '#7B61FF',
+    color: "#7B61FF",
     marginLeft: 8,
     flex: 1,
   },
   qrContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 24,
     padding: 20,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: "#1a1a1a",
     borderRadius: 12,
   },
   addressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1a1a1a',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#1a1a1a",
     padding: 16,
     borderRadius: 8,
     marginBottom: 24,
   },
   addressText: {
-    color: '#fff',
+    color: "#fff",
     marginRight: 8,
     fontSize: 16,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     gap: 16,
   },
   shareButton: {
@@ -267,115 +293,114 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#7B61FF',
-    alignItems: 'center',
+    borderColor: "#7B61FF",
+    alignItems: "center",
   },
   confirmButton: {
     flex: 1,
     padding: 16,
     borderRadius: 8,
-    backgroundColor: '#7B61FF',
-    alignItems: 'center',
+    backgroundColor: "#7B61FF",
+    alignItems: "center",
   },
   shareButtonText: {
-    color: '#7B61FF',
+    color: "#7B61FF",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   confirmButtonText: {
-    color: '#000',
+    color: "#000",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: '#000',
+    backgroundColor: "#000",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 16,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
   searchInput: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: "#1a1a1a",
     padding: 16,
     borderRadius: 8,
-    color: '#fff',
+    color: "#fff",
     marginBottom: 16,
   },
   tokenList: {
-    maxHeight: '70%',
+    maxHeight: "70%",
   },
   tokenItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: "#1a1a1a",
   },
   tokenInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   tokenIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
   tokenIconText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   tokenSymbol: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   tokenName: {
-    color: '#666',
+    color: "#666",
     fontSize: 14,
   },
   tokenPrice: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
   },
   copiedPopup: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
+    position: "absolute",
+    top: "50%",
+    left: "50%",
     transform: [{ translateX: -75 }, { translateY: -25 }],
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
     borderRadius: 8,
     padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     width: 150,
     height: 50,
   },
   copiedPopupText: {
-    color: '#fff',
+    color: "#fff",
     marginLeft: 8,
     fontSize: 16,
   },
 });
-

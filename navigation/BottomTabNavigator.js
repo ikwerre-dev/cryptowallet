@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Platform, StatusBar,StyleSheet,View } from 'react-native'; // Import StatusBar and Platform
-import { Home, PieChart, RefreshCw, BarChart2, Settings, MoreHorizontal } from 'react-native-feather';
+import { Home, PieChart, RefreshCw, BarChart2, Settings, MoreHorizontal,Clock } from 'react-native-feather';
 import DashboardScreen from '../screens/(dashboard)/Dashboard.js';
 import CoinDetailScreen from '../screens/(dashboard)/CoinDetailScreen';
 import PortfolioScreen from '../screens/(dashboard)/Portfolio';
@@ -54,6 +54,16 @@ function PortfolioStack() {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Portfolio" component={PortfolioScreen} />
+            <Stack.Screen name="CoinDetailScreen" component={CoinDetailScreen} />
+        </Stack.Navigator>
+    );
+}
+
+
+function MarketStack() {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Portfolio" component={TradingViewWidget} />
             <Stack.Screen name="CoinDetailScreen" component={CoinDetailScreen} />
         </Stack.Navigator>
     );
@@ -155,10 +165,10 @@ export default function BottomTabNavigator() {
                         }}
                     />
                     <Tab.Screen
-                        name="Markets"
-                        component={TradingViewWidget}
+                        name="Transactions"
+                        component={TransactionsScreen}
                         options={{
-                            tabBarIcon: ({ color }) => <BarChart2 stroke={color} width={24} height={24} />,
+                            tabBarIcon: ({ color }) => <Clock stroke={color} width={24} height={24} />,
                         }}
                     />
                     <Tab.Screen

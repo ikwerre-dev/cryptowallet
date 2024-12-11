@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,18 +8,18 @@ import {
   Modal,
   ScrollView,
   Dimensions,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import { MotiView } from 'moti';
-import { Easing } from 'react-native-reanimated';
-import * as Notifications from 'expo-notifications';
-import { Keyboard, TouchableWithoutFeedback } from 'react-native';
-import { SafeAreaView } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { useAuth } from '../../context/AuthContext';
-import { Image } from 'react-native';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { MotiView } from "moti";
+import { Easing } from "react-native-reanimated";
+import * as Notifications from "expo-notifications";
+import { Keyboard, TouchableWithoutFeedback } from "react-native";
+import { SafeAreaView } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
+import { Image } from "react-native";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -29,86 +29,68 @@ Notifications.setNotificationHandler({
   }),
 });
 
-
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 export default function SendScreen({ navigation }) {
   const [step, setStep] = useState(1);
-  const [recipient, setRecipient] = useState('');
-  const [amount, setAmount] = useState('');
+  const [recipient, setRecipient] = useState("");
+  const [amount, setAmount] = useState("");
   const [gasfee, setGasfee] = useState(0);
   const [selectedToken, setSelectedToken] = useState(null);
   const [showScanner, setShowScanner] = useState(false);
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [contacts, setcontacts] = useState([]);
 
   const cameraRef = useRef(null);
 
   const cryptoData = [
-    { symbol: "BTC", name: "Bitcoin", price: 6780, balance: 0.0000013, value: "$23.56", icon: "🟡" },
-    { symbol: "ETH", name: "Ethereum", price: 1478.1, balance: 0.17, value: "$234", icon: "🟣" },
-    { symbol: "BNB", name: "Binance", price: 123.77, balance: 0.01745, value: "$4.98", icon: "🟡" },
-    { symbol: "MATIC", name: "Polygon", price: 16.96, balance: 34.3, value: "$30", icon: "🟣" },
-    { symbol: "XRP", name: "Ripple", price: 0.98, balance: 3.00912, value: "$30", icon: "⚪" },
+    {
+      symbol: "BTC",
+      name: "Bitcoin",
+      price: 6780,
+      balance: 0.0000013,
+      value: "$23.56",
+      icon: "🟡",
+    },
+    {
+      symbol: "ETH",
+      name: "Ethereum",
+      price: 1478.1,
+      balance: 0.17,
+      value: "$234",
+      icon: "🟣",
+    },
+    {
+      symbol: "BNB",
+      name: "Binance",
+      price: 123.77,
+      balance: 0.01745,
+      value: "$4.98",
+      icon: "🟡",
+    },
+    {
+      symbol: "MATIC",
+      name: "Polygon",
+      price: 16.96,
+      balance: 34.3,
+      value: "$30",
+      icon: "🟣",
+    },
+    {
+      symbol: "XRP",
+      name: "Ripple",
+      price: 0.98,
+      balance: 3.00912,
+      value: "$30",
+      icon: "⚪",
+    },
   ];
 
-  const { user } = useAuth();
-
-  const uid = user.uid;
-
+  const { user, balances, userId } = useAuth();
 
   const [prices, setPrices] = useState({});
-
-  const [balances, setBalances] = useState([
-    { symbol: 'BTC', balance: user && user.btc_balance, full_name: 'Bitcoin' },
-    { symbol: 'USDT', balance: user && user.usdt_balance, full_name: 'Tether' },
-    { symbol: 'ADA', balance: user && user.ada_balance, full_name: 'Cardano' },
-    { symbol: 'BNB', balance: user && user.bnb_balance, full_name: 'Binance Coin' },
-    { symbol: 'DOGE', balance: user && user.doge_balance, full_name: 'Dogecoin' },
-    { symbol: 'ETH', balance: user && user.eth_balance, full_name: 'Ethereum' },
-    { symbol: 'MATIC', balance: user && user.matic_balance, full_name: 'Polygon' },
-    { symbol: 'SOL', balance: user && user.sol_balance, full_name: 'Solana' },
-    { symbol: 'USDC', balance: user && user.usdc_balance, full_name: 'USD Coin' },
-    { symbol: 'XRP', balance: user && user.xrp_balance, full_name: 'Ripple' },
-  ]);
-
-  const fetchCryptoPrices = async () => {
-    try {
-      const response = await axios.get('https://api.coincap.io/v2/assets');
-      const assets = response.data.data;
-
-      const updatedBalances = balances.map((crypto) => {
-        const asset = assets.find((asset) => asset.symbol === crypto.symbol);
-        return {
-          ...crypto,
-          priceUsd: asset ? parseFloat(asset.priceUsd) : 0, // Add price if available
-          changePercent24Hr: asset ? parseFloat(asset.changePercent24Hr) : 0, // Add change percentage if available
-          rank: asset ? asset.rank : 0, // Add price if available
-          maxsupply: asset ? asset.maxSupply : 0, // Add price if available
-          marketcap: asset ? asset.marketCapUsd : 0, // Add price if available
-          id: asset ? asset.id : 0, // Add price if available
-          supply: asset ? asset.supply : 0, // Add price if available
-          maxSupply: asset ? asset.maxSupply : 0, // Add price if available
-
-        };
-      });
-
-      setBalances(updatedBalances);
-      // console.log(assets)
-    } catch (error) {
-      console.error('Error fetching crypto prices:', error.message);
-    }
-  };
-
-  useEffect(() => {
-    fetchCryptoPrices(); // Initial fetch
-    const intervalId = setInterval(fetchCryptoPrices, 5000); // Fetch every 5 seconds
-
-    return () => clearInterval(intervalId); // Cleanup interval on component unmount
-  }, []);
-
 
   useEffect(() => {
     const generateCacheString = () => {
@@ -117,26 +99,27 @@ export default function SendScreen({ navigation }) {
     };
 
     const loadUserData = async () => {
-      const storedUser = await AsyncStorage.getItem('user');
-      if (storedUser) {
-        try {
-          const cacheString = generateCacheString();
-          const response = await axios.post(`http://192.168.1.115/cryptowallet_api/getAllTransfers?cache=${cacheString}`, storedUser);
-          if (response.data.code === 200) {
-
-            setcontacts(response.data.data);
-            // console.log(`user refreshed - ${cacheString}`);
-          } else {
-            alert(response.data.message);
-          }
-        } catch (error) {
-          console.error(error.response ? error.response.data : error.message);
+      const requestData = {
+        user_id: userId,
+      };
+      try {
+        const cacheString = generateCacheString();
+        const response = await axios.post(
+          `http://192.168.1.115/cryptowallet_api/getAllTransfers?cache=${cacheString}`,
+          requestData,
+        );
+        if (response.data.code === 200) {
+        setcontacts(response.data.data);
+          // console.log(`user refreshed - ${cacheString}`);
+        } else {
+          alert(response.data.message);
         }
+      } catch (error) {
+        console.error(error.response ? error.response.data : error.message);
       }
-
-      setLoading(false);
     };
 
+    
     loadUserData();
 
     // Set an interval to call loadUserData every 2 seconds
@@ -146,89 +129,102 @@ export default function SendScreen({ navigation }) {
     return () => clearInterval(intervalId);
   }, []);
 
-
-  const filteredContacts = contacts.filter(contact =>
-    contact.cryptocurrency.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contact.wallet_address.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredContacts = contacts && contacts.filter(
+    (contact) =>
+      contact.cryptocurrency
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      contact.wallet_address.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const filteredTokens = balances.filter(token =>
-    token.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTokens = balances.filter(
+    (token) =>
+      token.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      token.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
   );
-
 
   // console.log(filteredTokens)
 
   const handleNumberPress = (num) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (amount.includes('.') && num === '.') return;
-    if (amount.includes('.')) {
-      const decimals = amount.split('.')[1];
-      if (decimals && decimals.length >= 8) return;
-    }
-    setAmount(prev => {
-      const newAmount = prev + num;
+
+    if (amount.includes(".") && num === ".") return;
+
+    setAmount((prev) => {
+      let newAmount = prev + num;
+
+      // Remove leading zeros if there is no decimal point
+      if (!newAmount.includes(".")) {
+        newAmount = newAmount.replace(/^0+/, "");
+      } else {
+        // Prevent entering a second '0' before a digit or '.'
+        const [integerPart, decimalPart] = newAmount.split(".");
+        if (integerPart === "0" && num === "0") return prev;
+      }
+
+      // Prevent entering more than 8 decimal places
+      const decimals = newAmount.split(".")[1];
+      if (decimals && decimals.length > 8) return prev;
+
       setGasfee((parseFloat(newAmount) * 0.005).toFixed(3));
       return newAmount;
     });
   };
-  
   const handleDeletePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setAmount(prev => {
+    setAmount((prev) => {
       const newAmount = prev.slice(0, -1) || "0";
       setGasfee((parseFloat(newAmount) * 0.005).toFixed(3));
       return newAmount;
     });
   };
-  
 
   const handleConfirm = async () => {
     const generateCacheString = () => {
       // Generates a unique 16-character string (can include letters and digits)
       return Math.random().toString(36).substring(2, 18);
-  };
-  
+    };
+
     const payload = {
-      user_id: user.id,
+      user_id: userId,
       amount: amount,
       wallet_address: recipient,
       cryptocurrency: selectedToken.symbol,
-      gas_fee: gasfee
+      gas_fee: gasfee,
     };
 
-    console.log(payload)
+    console.debug(user);
     if (payload) {
       try {
         const cacheString = generateCacheString();
-        const response = await axios.post(`http://192.168.1.115/cryptowallet_api/transfer?cache=${cacheString}`, payload);
+        const response = await axios.post(
+          `http://192.168.1.115/cryptowallet_api/transfer?cache=${cacheString}`,
+          payload,
+        );
         if (response.data.code === 200) {
-
           console.log(response.data);
-          // console.log(`user refreshed - ${cacheString}`);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Transaction Successful",
+              body: "Transaction has been processed successfully!!!",
+            },
+            trigger: null,
+          });
+          setShowSuccess(true);
+          setTimeout(() => {
+            setShowSuccess(false);
+            // navigation.goBack();
+            navigation.navigate("Dashboard");
+          }, 2000);
         } else {
           alert(response.data.message);
         }
+        console.log(response.data);
       } catch (error) {
         console.error(error.response ? error.response.data : error.message);
       }
     }
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Transaction Successful',
-        body: "Transaction has been processed successfully!!!",
-      },
-      trigger: null,
-    });
-
-    // setShowSuccess(true);
-    // setTimeout(() => {
-    //   setShowSuccess(false);
-    //   // navigation.goBack();
-    //   navigation.navigate('Dashboard');
-    // }, 2000);
   };
 
   const handleBarCodeScanned = ({ data }) => {
@@ -239,7 +235,6 @@ export default function SendScreen({ navigation }) {
 
   const renderStep1 = () => (
     <View style={styles.container}>
-
       <Text style={styles.label}>Send To</Text>
       <View style={styles.inputContainer}>
         <TextInput
@@ -249,9 +244,7 @@ export default function SendScreen({ navigation }) {
           value={recipient}
           onChangeText={setRecipient}
         />
-
       </View>
-
 
       <Text style={[styles.label, { marginTop: 24 }]}>Recent Transfers</Text>
       <View style={styles.searchContainer}>
@@ -266,9 +259,9 @@ export default function SendScreen({ navigation }) {
       </View>
 
       <ScrollView style={styles.contactList}>
-        {filteredContacts.map(contact => (
+        {filteredContacts.map((contact,index) => (
           <TouchableOpacity
-            key={contact.id}
+            key={contact.cryptocurrency}
             style={styles.contactItem}
             onPress={() => {
               setRecipient(contact.wallet_address);
@@ -279,10 +272,13 @@ export default function SendScreen({ navigation }) {
               <Text style={styles.avatarText}>{contact.cryptocurrency[0]}</Text>
             </View>
             <View style={styles.contactInfo}>
-              <Text style={styles.contactName}>{contact.cryptocurrency.toUpperCase()}</Text>
-              <Text style={styles.contactAddress}>
-                {`${contact.wallet_address.slice(0, 8)}****${contact.wallet_address.slice(-8)}`}
+              <Text style={styles.contactName}>
+                {contact.cryptocurrency.toUpperCase()}
               </Text>
+              <Text style={styles.contactAddress}>
+                {`${contact.wallet_address.length > 8 
+                  ? `${contact.wallet_address.slice(0, 8)}****${contact.wallet_address.slice(-8)}` 
+                  : contact.wallet_address}`}              </Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -294,7 +290,7 @@ export default function SendScreen({ navigation }) {
         onPress={() => {
           setStep(2);
           setShowTokenModal(true);
-          setSearchQuery('')
+          setSearchQuery("");
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }}
       >
@@ -307,21 +303,26 @@ export default function SendScreen({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.label}>Enter Amount</Text>
       <View style={styles.amountContainer}>
-        <Text style={styles.amount}>{amount || '0'}</Text>
+        <Text style={styles.amount}>${amount || "0"}</Text>
         <TouchableOpacity style={styles.maxButton}>
           <Text style={styles.maxButtonText}>Gas Fee: ${gasfee}</Text>
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.balanceContainer} onPress={() => {
-        setShowTokenModal(true);
-        setSearchQuery('')
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      }}>
+      <TouchableOpacity
+        style={styles.balanceContainer}
+        onPress={() => {
+          setShowTokenModal(true);
+          setSearchQuery("");
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }}
+      >
         <View style={styles.tokenInfo}>
           <Text style={styles.tokenIcon}>{selectedToken?.icon}</Text>
           <Image
-            source={{ uri: `https://cryptologos.cc/logos/${selectedToken?.full_name.toLowerCase().replace(/\s+/g, '-')}-${selectedToken?.symbol.toLowerCase()}-logo.png` }}
+            source={{
+              uri: `https://cryptologos.cc/logos/${selectedToken?.full_name.toLowerCase().replace(/\s+/g, "-")}-${selectedToken?.symbol.toLowerCase()}-logo.png`,
+            }}
             style={styles.cryptoIcon}
           />
           <View>
@@ -332,7 +333,8 @@ export default function SendScreen({ navigation }) {
         <View>
           <Text style={styles.tokenBalance}>${selectedToken?.balance}</Text>
           <Text style={styles.tokenValue}>
-            {selectedToken && selectedToken.balance / selectedToken.priceUsd !== 0
+            {selectedToken &&
+            selectedToken.balance / selectedToken.priceUsd !== 0
               ? (selectedToken.balance / selectedToken.priceUsd).toFixed(5)
               : "0"}
           </Text>
@@ -340,7 +342,7 @@ export default function SendScreen({ navigation }) {
       </TouchableOpacity>
 
       <View style={styles.keypad}>
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0].map((num) => (
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, ".", 0].map((num) => (
           <TouchableOpacity
             key={num}
             style={styles.keypadButton}
@@ -368,10 +370,12 @@ export default function SendScreen({ navigation }) {
   );
 
   return (
-
     <SafeAreaView style={styles.container}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
+        >
           <View style={styles.container}>
             <View style={styles.header}>
               <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -418,7 +422,7 @@ export default function SendScreen({ navigation }) {
                   </View>
 
                   <TextInput
-                    style={[styles.searchInput, { backgroundColor: '#121212' }]}
+                    style={[styles.searchInput, { backgroundColor: "#121212" }]}
                     placeholder="Search token"
                     placeholderTextColor="#666"
                     value={searchQuery}
@@ -433,23 +437,41 @@ export default function SendScreen({ navigation }) {
                         onPress={() => {
                           setSelectedToken(token);
                           setShowTokenModal(false);
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          Haptics.impactAsync(
+                            Haptics.ImpactFeedbackStyle.Light,
+                          );
                         }}
                       >
                         <View style={styles.tokenInfo}>
                           <Image
-                            source={{ uri: `https://cryptologos.cc/logos/${token?.full_name.toLowerCase().replace(/\s+/g, '-')}-${token?.symbol.toLowerCase()}-logo.png` }}
+                            source={{
+                              uri: `https://cryptologos.cc/logos/${token?.full_name.toLowerCase().replace(/\s+/g, "-")}-${token?.symbol.toLowerCase()}-logo.png`,
+                            }}
                             style={styles.cryptoIcon}
                           />
                           <View>
-
-                            <Text style={styles.tokenSymbol}>{token.symbol}</Text>
-                            <Text style={styles.tokenName}>{token.full_name}</Text>
+                            <Text style={styles.tokenSymbol}>
+                              {token.symbol}
+                            </Text>
+                            <Text style={styles.tokenName}>
+                              {token.full_name}
+                            </Text>
                           </View>
                         </View>
                         <View>
-                          <Text style={styles.tokenBalance}>${token.balance}</Text>
-                          <Text style={styles.tokenValue}>{(token.priceUsd ? (token.balance / token.priceUsd) : 0) != 0 ? (token.priceUsd ? (token.balance / token.priceUsd) : 0).toFixed(5) : 0}</Text>
+                          <Text style={styles.tokenBalance}>
+                            ${token.balance}
+                          </Text>
+                          <Text style={styles.tokenValue}>
+                            {(token.priceUsd
+                              ? token.balance / token.priceUsd
+                              : 0) != 0
+                              ? (token.priceUsd
+                                  ? token.balance / token.priceUsd
+                                  : 0
+                                ).toFixed(5)
+                              : 0}
+                          </Text>
                         </View>
                       </TouchableOpacity>
                     ))}
@@ -469,7 +491,7 @@ export default function SendScreen({ navigation }) {
                   from={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{
-                    type: 'timing',
+                    type: "timing",
                     duration: 500,
                     easing: Easing.out(Easing.ease),
                   }}
@@ -504,9 +526,8 @@ export default function SendScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
     // paddingTop: 10,
-
   },
   cryptoIcon: {
     width: 25,
@@ -514,36 +535,36 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 16,
-    paddingTop: 0
+    paddingTop: 0,
     // paddingTop: 50,
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
   label: {
     fontSize: 16,
-    color: '#fff',
+    color: "#fff",
     marginBottom: 0,
     marginTop: 10,
     paddingHorizontal: 16,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1a1a1a',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1a1a1a",
     margin: 16,
     borderRadius: 8,
     paddingRight: 8,
   },
   input: {
     flex: 1,
-    color: '#fff',
+    color: "#fff",
     padding: 16,
     fontSize: 16,
   },
@@ -551,245 +572,245 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 16,
   },
   addButtonText: {
-    color: '#7B61FF',
+    color: "#7B61FF",
     marginLeft: 8,
     fontSize: 14,
   },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1a1a1a',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1a1a1a",
     margin: 16,
     borderRadius: 8,
     padding: 12,
   },
   searchInput: {
     // flex: 1,
-    color: '#fff',
+    color: "#fff",
     marginLeft: 8,
     fontSize: 16,
     paddingVertical: 15,
-    paddingHorizontal: 10
+    paddingHorizontal: 10,
   },
   contactList: {
     flex: 1,
     marginHorizontal: 16,
   },
   contactItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: "#1a1a1a",
   },
   contactAvatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#7B61FF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#7B61FF",
+    alignItems: "center",
+    justifyContent: "center",
   },
   avatarText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   contactInfo: {
     marginLeft: 12,
   },
   contactName: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   contactAddress: {
-    color: '#666',
+    color: "#666",
     fontSize: 14,
   },
   button: {
-    backgroundColor: '#7B61FF',
+    backgroundColor: "#7B61FF",
     margin: 16,
     padding: 16,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   amountContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: 24,
   },
   amount: {
     fontSize: 40,
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
   maxButton: {
-    backgroundColor: '#7B61FF',
+    backgroundColor: "#7B61FF",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
     marginTop: 8,
   },
   maxButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   balanceContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#1a1a1a',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#1a1a1a",
     margin: 16,
     padding: 16,
     borderRadius: 8,
   },
   tokenInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   tokenIcon: {
     fontSize: 24,
     marginRight: 12,
   },
   tokenSymbol: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   tokenName: {
-    color: '#666',
+    color: "#666",
     fontSize: 14,
   },
   tokenBalance: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'right',
+    fontWeight: "bold",
+    textAlign: "right",
   },
   tokenValue: {
-    color: '#666',
+    color: "#666",
     fontSize: 14,
-    textAlign: 'right',
+    textAlign: "right",
   },
   keypad: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
     padding: 16,
   },
   keypadButton: {
     width: width / 3 - 24,
     height: 64,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 16,
   },
   keypadButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 24,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   scannerContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   closeScannerButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 50,
     right: 16,
     padding: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     borderRadius: 20,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: '#000',
+    backgroundColor: "#000",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 16,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
   tokenList: {
-    maxHeight: '70%',
+    maxHeight: "70%",
   },
   tokenItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: "#1a1a1a",
   },
   successModal: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   successContent: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: "#1a1a1a",
     borderRadius: 16,
     padding: 24,
-    alignItems: 'center',
-    width: '80%',
+    alignItems: "center",
+    width: "80%",
   },
   successIcon: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(123, 97, 255, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(123, 97, 255, 0.1)",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 16,
   },
   successTitle: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
   successMessage: {
-    color: '#666',
+    color: "#666",
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 24,
   },
   successButton: {
-    backgroundColor: '#7B61FF',
+    backgroundColor: "#7B61FF",
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 8,
   },
   successButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   scrollView: {
     flex: 1,
@@ -798,4 +819,3 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
 });
-

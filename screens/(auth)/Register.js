@@ -17,8 +17,8 @@ export default function CreatePasswordScreen({ navigation }) {
     const [faceIdEnabled, setFaceIdEnabled] = useState(false);
     const [understood, setUnderstood] = useState(false);
     const [showLoginModal, setShowLoginModal] = useState(false);
-    const [loginEmail, setLoginEmail] = useState('testuser@gmail.com');
-    const [loginPassword, setLoginPassword] = useState('111111');
+    const [loginEmail, setLoginEmail] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
     const { login } = useAuth();
 
     const [emailError, setEmailError] = useState('');

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  Linking,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -22,19 +23,23 @@ const SettingsScreen = () => {
     { icon: 'chart-box-outline', title: 'My Portfolio', screen: 'Portfolio' },
     { icon: 'help-circle-outline', title: 'Help and Support', screen: 'Support' },
     { icon: 'file-document-outline', title: 'Terms and Conditions', screen: 'Terms' },
+    { icon: 'web', title: 'Manage Account', url: 'https://www.swiss-app.pro/?page=login' },  // New menu item
     { icon: 'power', title: 'Logout', screen: 'Logout' },
   ];
 
-  const MenuItem = ({ icon, title, screen }) => (
+  const MenuItem = ({ icon, title, screen, url }) => (
     <TouchableOpacity
       style={styles.menuItem}
-      onPress={() =>
-      {
+      onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-         title == 'Logout' ? logout() :  navigation.navigate(screen)        
-        
-      }    
-    }
+        if (title === 'Logout') {
+          logout();
+        } else if (url) {
+          Linking.openURL(url);  // Open URL in the browser
+        } else {
+          navigation.navigate(screen);
+        }
+      }}
     >
       <View style={styles.menuItemLeft}>
         <View style={styles.iconContainer}>
@@ -101,14 +106,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginHorizontal: 16,
     overflow: 'hidden',
-    marginTop:20
+    marginTop: 20,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 12,
-    paddingVertical:15,
+    paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#000',
   },

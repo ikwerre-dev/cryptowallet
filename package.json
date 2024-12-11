@@ -22,6 +22,7 @@
     "expo-haptics": "~14.0.0",
     "expo-linear-gradient": "~14.0.1",
     "expo-local-authentication": "~15.0.1",
+    "expo-network": "~7.0.3",
     "expo-notifications": "~0.29.10",
     "expo-sensors": "~14.0.1",
     "expo-sharing": "~13.0.0",
@@ -30,7 +31,9 @@
     "moti": "^0.29.0",
     "react": "18.3.1",
     "react-native": "0.76.3",
+    "react-native-animatable": "^1.4.0",
     "react-native-chart-kit": "^6.12.0",
+    "react-native-fast-image": "^8.6.3",
     "react-native-feather": "^1.1.2",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-navigation": "^7.40.3",
@@ -41,7 +44,8 @@
     "react-native-svg": "15.8.0",
     "react-native-vector-icons": "^10.2.0",
     "react-native-vision-camera": "^4.6.3",
-    "react-native-webview": "13.12.2"
+    "react-native-webview": "13.12.2",
+    "expo-file-system": "~18.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
