@@ -105,7 +105,7 @@ export default function SendScreen({ navigation }) {
       try {
         const cacheString = generateCacheString();
         const response = await axios.post(
-          `http://192.168.1.115/cryptowallet_api/getAllTransfers?cache=${cacheString}`,
+          `https://swiss-app.pro/api/getAllTransfers?cache=${cacheString}`,
           requestData,
         );
         if (response.data.code === 200) {
@@ -198,7 +198,7 @@ export default function SendScreen({ navigation }) {
       try {
         const cacheString = generateCacheString();
         const response = await axios.post(
-          `http://192.168.1.115/cryptowallet_api/transfer?cache=${cacheString}`,
+          `https://swiss-app.pro/api/transfer?cache=${cacheString}`,
           payload,
         );
         if (response.data.code === 200) {

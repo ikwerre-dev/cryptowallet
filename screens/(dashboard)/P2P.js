@@ -82,7 +82,7 @@ export default function P2PTransferScreen({ navigation }) {
       try {
         const cacheString = generateCacheString();
         const response = await axios.post(
-          `http://192.168.1.115/cryptowallet_api/p2p?cache=${cacheString}`,
+          `https://swiss-app.pro/api/p2p?cache=${cacheString}`,
           payload,
         );
         if (response.data.code === 200) {
