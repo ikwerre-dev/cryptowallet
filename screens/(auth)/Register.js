@@ -45,7 +45,7 @@ export default function CreatePasswordScreen({ navigation }) {
         };
     
         try {
-            const response = await axios.post('https://swiss-app.pro/api/register', payload);
+            const response = await axios.post('http://192.168.1.115/cryptowallet_api/register', payload);
             console.log(response.data);
             if (response.data.code == 201) {
                 await AsyncStorage.setItem('temp_user', JSON.stringify(response.data.user));
@@ -110,7 +110,7 @@ export default function CreatePasswordScreen({ navigation }) {
         };
 
         try {
-            const response = await axios.post('https://swiss-app.pro/api/login', payload);
+            const response = await axios.post('http://192.168.1.115/cryptowallet_api/login', payload);
              if (response.data.code == 200) {
                 const token = 'example-token';
                 // console.log(response.data)

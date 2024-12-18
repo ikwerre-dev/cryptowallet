@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
 
         const cacheString = generateCacheString();
         const response = await axios.post(
-          `https://swiss-app.pro/api/getUserDetails?cache=${cacheString}`,
+          `http://192.168.1.115/cryptowallet_api/getUserDetails?cache=${cacheString}`,
           JSON.parse(storedUser),
         );
 
@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }) => {
 
         const cacheString = generateCacheString();
         const response = await axios.post(
-          `https://swiss-app.pro/api/getAllTransactions?cache=${cacheString}`,
+          `http://192.168.1.115/cryptowallet_api/getAllTransactions?cache=${cacheString}`,
           JSON.parse(storedUser),
         );
 

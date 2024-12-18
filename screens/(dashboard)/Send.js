@@ -105,7 +105,7 @@ export default function SendScreen({ navigation }) {
       try {
         const cacheString = generateCacheString();
         const response = await axios.post(
-          `https://swiss-app.pro/api/getAllTransfers?cache=${cacheString}`,
+          `http://192.168.1.115/cryptowallet_api/getAllTransfers?cache=${cacheString}`,
           requestData,
         );
         if (response.data.code === 200) {
@@ -115,7 +115,8 @@ export default function SendScreen({ navigation }) {
           alert(response.data.message);
         }
       } catch (error) {
-        console.error(error.response ? error.response.data : error.message);
+        console.log(error)
+        console.warn(error.response ? error.response.data : error.message);
       }
     };
 
@@ -198,7 +199,7 @@ export default function SendScreen({ navigation }) {
       try {
         const cacheString = generateCacheString();
         const response = await axios.post(
-          `https://swiss-app.pro/api/transfer?cache=${cacheString}`,
+          `http://192.168.1.115/cryptowallet_api/transfer?cache=${cacheString}`,
           payload,
         );
         if (response.data.code === 200) {
@@ -261,7 +262,7 @@ export default function SendScreen({ navigation }) {
       <ScrollView style={styles.contactList}>
         {filteredContacts.map((contact,index) => (
           <TouchableOpacity
-            key={contact.cryptocurrency}
+            key={index}
             style={styles.contactItem}
             onPress={() => {
               setRecipient(contact.wallet_address);

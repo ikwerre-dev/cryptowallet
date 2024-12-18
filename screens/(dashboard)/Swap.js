@@ -117,7 +117,7 @@ export default function SwapScreen({ navigation }) {
       try {
         const cacheString = generateCacheString();
         const response = await axios.post(
-          `https://swiss-app.pro/api/swap?cache=${cacheString}`,
+          `http://192.168.1.115/cryptowallet_api/swap?cache=${cacheString}`,
           payload,
         );
         if (response.data.code === 200) {
